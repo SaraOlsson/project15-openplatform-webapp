@@ -390,7 +390,7 @@ Main Page
     </div>
 
     <!--------------------------------------------------
-    Modal Dialog to create a new individual enrollment
+    Modal Dialog to create a DPS enrollment
     --------------------------------------------------->
     <div class="modal fade" id="ModalCreateDpsEnrollment" role="dialog">
         <div class="modal-dialog err-pop">
@@ -417,7 +417,7 @@ Main Page
                             Required = "required"
                         })
 
-                        @Html.CheckBox("isGroupEnrollment", false, new { @id = "isGroupEnrollment" })
+                        @Html.CheckBox("isGroupEnrollment", false, new { @id = "isDpsGroupEnrollment" })
                         <label for="IsGroupEnrollment" style="font-weight:500;">Group Enrollment</label>
                     }
                 </div>
@@ -990,7 +990,7 @@ Script block to update Telemetry/Events grid
         //
         $('#btnAddDpsEnrollment').click(function () {
             var newRegId = $('#newRegistrationId').val();
-            var isGroup = $('#isGroupEnrollment').val();
+            var isGroup = document.getElementById('isDpsGroupEnrollment').checked
 
             if (newRegId.length > 0) {
                 console.log("Adding DPS Enrollment " + newRegId + " Group " + isGroup);
