@@ -958,8 +958,8 @@ Script block to update Telemetry/Events grid
             console.log("btnLocationLegend click");
             var coordinates = document.getElementById('txtCoordinates').innerHTML
             if (coordinates != '&nbsp;') {
-                var lng = parseFloat(coordinates.split(",")[0]);
-                var lat = parseFloat(coordinates.split(",")[1]);
+                var lat = parseFloat(coordinates.split(",")[0]);
+                var lng = parseFloat(coordinates.split(",")[1]);
 
                 map.setCamera({
                     center: [lng, lat]
