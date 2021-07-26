@@ -23,14 +23,18 @@ namespace OpenPlatform_WebPortal.Helper
 {
     public interface IIoTHubDpsHelper
     {
+        void SetHomeView(HomeView homeView);
         Task<IEnumerable<SelectListItem>> GetIoTHubDevices();
         Task<Device> GetIoTHubDevice(string deviceId);
         Task<bool> AddIoTHubDevice(string deviceId);
         Task<bool> DeleteIoTHubDevice(string deviceId);
         Task<Twin> GetDeviceTwin(string deviceId);
+        Task<Twin> GetModuleTwin(string deviceId, string moduleId);
+        Task<IEnumerable<Module>> GetModules(string deviceId);
         Task<EnrollmentGroup> GetDpsGroupEnrollment(string enrollmentGroupId);
         Task<IEnumerable<SelectListItem>> GetDpsGroupEnrollments();
         Task<IEnumerable<SelectListItem>> GetDpsEnrollments();
+        Task<EnrollmentListSelectorViewModel> GetDpsEnrollments2();
         Task<IEnumerable<SelectListItem>> GetDpsIndividualEnrollments();
         Task<IndividualEnrollment> GetDpsIndividualEnrollment(string registrationId);
         Task<AttestationMechanism> GetDpsAttestationMechanism(string registrationId, bool isGroup);
@@ -53,6 +57,8 @@ namespace OpenPlatform_WebPortal.Helper
         private readonly string _privateModelRepoUrl;
         private readonly string _privateModelToken;
         private static DeviceModelResolver _resolver = null;
+        private HomeView _homeView;
+        
         public IoTHubDpsHelper(IOptions<AppSettings> config, ILogger<IoTHubDpsHelper> logger)
         {
             _logger = logger;
@@ -67,6 +73,10 @@ namespace OpenPlatform_WebPortal.Helper
             _privateModelRepoUrl = _appSettings.ModelRepository.repoUrl;
             _privateModelToken = _appSettings.GitHub.token;
         }
+        public void SetHomeView(HomeView homeView)
+        {
+            _homeView = homeView;
+        }
 
         #region IOTHUB
         /**********************************************************************************
@@ -76,7 +86,7 @@ namespace OpenPlatform_WebPortal.Helper
         {
             List<SelectListItem> deviceList = new List<SelectListItem>();
             // add empty one
-            deviceList.Add(new SelectListItem { Value = "", Text = "" });
+            //deviceList.Add(new SelectListItem { Value = "", Text = "" });
 
             try
             {
@@ -188,6 +198,47 @@ namespace OpenPlatform_WebPortal.Helper
             return twin;
         }
 
+        /**********************************************************************************
+         * Gets Module Twin from IoT Hub
+         *********************************************************************************/
+        public async Task<Twin> GetModuleTwin(string deviceId, string moduleId)
+        {
+            Twin twin = null;
+
+            try
+            {
+                _logger.LogDebug($"Retrieving Module Twin for {deviceId}");
+                twin = await _registryManager.GetTwinAsync(deviceId, moduleId);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in GetModuleTwin() : {e.Message}");
+                throw e;
+            }
+            return twin;
+        }
+
+        /**********************************************************************************
+         * Gets IoT Edge Modules
+         *********************************************************************************/
+        public async Task<IEnumerable<Module>>GetModules(string deviceId)
+        {
+            IEnumerable<Module> modules;
+
+            try
+            {
+                _logger.LogDebug($"Retrieving Modules for {deviceId}");
+                modules = await _registryManager.GetModulesOnDeviceAsync(deviceId);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in GetModulesOnDeviceAsync() : {e.Message}");
+                throw e;
+            }
+            return modules;
+        }
+
+
         #endregion // IOTHUB
 
         #region DPS
@@ -264,6 +315,55 @@ namespace OpenPlatform_WebPortal.Helper
             return enrollmentList;
         }
 
+        public async Task<EnrollmentListSelectorViewModel> GetDpsEnrollments2()
+        {
+            var enrollmentList = new EnrollmentListSelectorViewModel();
+
+            try
+            {
+                QuerySpecification querySpecification = new QuerySpecification("SELECT * FROM enrollments");
+                using (Query query = _provisioningServiceClient.CreateIndividualEnrollmentQuery(querySpecification))
+                {
+                    while (query.HasNext())
+                    {
+                        QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
+                        foreach (IndividualEnrollment enrollment in queryResult.Items)
+                        {
+                            // we only support symmetric key for now
+                            if (enrollment.Attestation.GetType().Name.Equals("SymmetricKeyAttestation"))
+                            { 
+                                enrollmentList.EnrollmentList.Add(new EnrollmentListViewModel { RegistrationId = enrollment.RegistrationId, isGroup = false});
+                            }
+                        }
+                    }
+                }
+
+                querySpecification = new QuerySpecification("SELECT * FROM enrollments");
+                using (Query query = _provisioningServiceClient.CreateEnrollmentGroupQuery(querySpecification))
+                {
+                    while (query.HasNext())
+                    {
+                        QueryResult queryResult = await query.NextAsync().ConfigureAwait(false);
+                        foreach (EnrollmentGroup enrollment in queryResult.Items)
+                        {
+                            // we only support symmetric key for now
+                            if (enrollment.Attestation.GetType().Name.Equals("SymmetricKeyAttestation"))
+                            {
+                                enrollmentList.EnrollmentList.Add(new EnrollmentListViewModel { RegistrationId = enrollment.EnrollmentGroupId, isGroup = true });
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in GetDpsEnrollments() : {e.Message}");
+                throw new ProvisioningServiceClientHttpException($"Failed to retrieve enrollments", e);
+            }
+
+            return enrollmentList;
+        }
+
         public async Task<IEnumerable<SelectListItem>> GetDpsEnrollments()
         {
             List<SelectListItem> enrollmentList = new List<SelectListItem>();
@@ -282,7 +382,13 @@ namespace OpenPlatform_WebPortal.Helper
                             // we only support symmetric key for now
                             if (enrollment.Attestation.GetType().Name.Equals("SymmetricKeyAttestation"))
                             {
-                                enrollmentList.Add(new SelectListItem { Value = enrollment.RegistrationId, Text = enrollment.RegistrationId });
+                                var item = new SelectListItem
+                                {
+                                    Value = enrollment.RegistrationId,
+                                    Text = enrollment.RegistrationId
+                                };
+
+                                enrollmentList.Add(new SelectListItem { Value = enrollment.RegistrationId, Text = enrollment.RegistrationId});
                             }
                         }
                     }

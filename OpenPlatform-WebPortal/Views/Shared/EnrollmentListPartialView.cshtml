@@ -1,0 +1,10 @@
+﻿@model OpenPlatform_WebPortal.Models.EnrollmentListSelectorViewModel
+
+    <option value=""></option>
+    @if (ViewBag.EnrollmentList != null)
+    {
+        foreach (var item in ViewBag.EnrollmentList.EnrollmentList)
+        {
+            <option value="@item.RegistrationId" data-isGroup="@item.isGroup">@item.RegistrationId</option>
+        }
+    }

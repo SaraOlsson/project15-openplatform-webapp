@@ -22,6 +22,7 @@ using System.Text;
 using QRCoder;
 using System.Drawing;
 using System.Security.Cryptography;
+using System.Threading;
 
 namespace OpenPlatform_WebPortal.Controllers
 {
@@ -140,6 +141,28 @@ namespace OpenPlatform_WebPortal.Controllers
             }
 
             JObject twinJson = (JObject)JsonConvert.DeserializeObject(twin.ToJson());
+
+            deviceData.isEdge = twin.Capabilities.IotEdge;
+
+            if (deviceData.isEdge == true)
+            {
+                var modules = await _helper.GetModules(deviceId).ConfigureAwait(false);
+
+                foreach (var module in modules)
+                {
+                    if (module.Id.Contains("$edgeAgent") || module.Id.Contains("$edgeHub"))
+                    {
+                        continue;
+                    }
+
+                    var moduleTwin = await _helper.GetModuleTwin(deviceId, module.Id).ConfigureAwait(false);
+
+                    var homeView = (HomeView)TempData["HomeView"];
+
+
+
+                }
+            }
 
             // Check if this is IoT Plug and Play device or not
             if (twinJson.ContainsKey("modelId"))
@@ -262,7 +285,7 @@ namespace OpenPlatform_WebPortal.Controllers
             {
                 if (deviceId != null)
                 {
-                    bool bCreated = await _helper.AddIoTHubDevice(deviceId);
+                    await _helper.AddIoTHubDevice(deviceId);
                 }
             }
             catch (Exception e)
@@ -270,7 +293,24 @@ namespace OpenPlatform_WebPortal.Controllers
                 _logger.LogError($"Exception in AddIoTHubDevice() : {e.Message}");
                 return StatusCode(400, new { message = e.Message });
             }
+
             return Ok();
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> RefreshIoTHubDevices(int delay)
+        {
+            try
+            {
+                Thread.Sleep(delay);
+                ViewBag.DeviceList = await _helper.GetIoTHubDevices();
+                return PartialView("DeviceIdListPartialView");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in RefreshIoTHubDevices() : {e.Message}");
+                return StatusCode(400, new { message = e.Message });
+            }
         }
 
         // Deletes a previously registered device from IoT Hub
@@ -322,43 +362,41 @@ namespace OpenPlatform_WebPortal.Controllers
         * Device Provisioning Service (DPS)
         *************************************************************/
         #region DPS
+
+        [HttpGet]
+        public async Task<ActionResult> RefreshDpsEnrollments()
+        {
+            var enrollmentList = await _helper.GetDpsEnrollments2();
+            ViewBag.EnrollmentList = enrollmentList;
+            return PartialView("EnrollmentListPartialView");
+        }
         //
         // Retrieves individual entrollment info.
         // Supports Symmetric Key only.
         // To do : Add X.509 support
         // https://docs.microsoft.com/en-us/dotnet/api/microsoft.azure.devices.provisioning.service.provisioningserviceclient.createindividualenrollmentquery?view=azure-dotnet
         [HttpGet]
-        public async Task<ActionResult> GetDpsEnrollment(string registrationId)
+        public async Task<ActionResult> GetDpsEnrollment(string registrationId, bool isGroup)
         {
             IndividualEnrollment individualEnrollment = null;
             EnrollmentGroup groupEnrollment = null;
-            bool isGroup = false;
-
             DPS_ENROLLMENT_DATA enrollmentData = new DPS_ENROLLMENT_DATA();
 
             try
             {
-                // retrieve the enrollment
-                individualEnrollment = await _helper.GetDpsIndividualEnrollment(registrationId).ConfigureAwait(false);
-
-                if (individualEnrollment == null)
+                if (isGroup == false)
                 {
-                    _logger.LogWarning($"Individual enrollment {registrationId} not found");
-                    groupEnrollment = await _helper.GetDpsGroupEnrollment(registrationId).ConfigureAwait(false);
-
-                    if (groupEnrollment != null)
-                    {
-                        isGroup = true;
-                    }
+                    // retrieve the enrollment
+                    individualEnrollment = await _helper.GetDpsIndividualEnrollment(registrationId).ConfigureAwait(false);
                 }
                 else
                 {
-                    isGroup = false;
+                    groupEnrollment = await _helper.GetDpsGroupEnrollment(registrationId).ConfigureAwait(false);
                 }
 
                 if (individualEnrollment == null && groupEnrollment == null)
                 {
-                    return Json(new { Success = false, Message = "Failed to create Group Enrollment" });
+                    return Json(new { Success = false, Message = "Failed to retrieve Group Enrollment" });
                 }
                 else
                 {
@@ -374,7 +412,7 @@ namespace OpenPlatform_WebPortal.Controllers
                     {
                         SymmetricKeyAttestation attestation = (SymmetricKeyAttestation)attestationMechanism.GetAttestation();
 
-                        if (individualEnrollment != null)
+                        if (isGroup == false)
                         {
                             enrollmentData.registrationId = individualEnrollment.RegistrationId;
                             enrollmentData.status = individualEnrollment.ProvisioningStatus.ToString();
@@ -384,7 +422,6 @@ namespace OpenPlatform_WebPortal.Controllers
                             enrollmentData.registrationId = groupEnrollment.EnrollmentGroupId;
                             enrollmentData.status = groupEnrollment.ProvisioningStatus.ToString();
                         }
-                        enrollmentData.isGroup = isGroup;
                         enrollmentData.primaryKey = attestation.PrimaryKey;
                         enrollmentData.secondaryKey = attestation.SecondaryKey;
                     }
@@ -392,7 +429,7 @@ namespace OpenPlatform_WebPortal.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError($"Exception in GetEnrollment() : {e.Message}");
+                _logger.LogError($"Exception in getDpsEnrollment() : {e.Message}");
                 return StatusCode(400, new { message = $"Failed to get enrollment {registrationId}. {e.Message}" });
             }
 
@@ -422,13 +459,13 @@ namespace OpenPlatform_WebPortal.Controllers
         // Delete a device enrollment record
         // https://docs.microsoft.com/en-us/rest/api/iot-dps/deleteindividualenrollment/deleteindividualenrollment
         [HttpDelete]
-        public async Task<ActionResult> DeleteDpsEnrollment(string enrollmentId, bool isGroup)
+        public async Task<ActionResult> DeleteDpsEnrollment(string registrationId, bool isGroup)
         {
             bool bDeleted = false;
 
             try
             {
-                bDeleted = await _helper.DeleteDpsEnrollment(enrollmentId, isGroup);
+                bDeleted = await _helper.DeleteDpsEnrollment(registrationId, isGroup);
             }
             catch (Exception e)
             {
@@ -458,21 +495,22 @@ namespace OpenPlatform_WebPortal.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> GenerateQrCode(string registrationId, string enrollmentId)
+        public async Task<ActionResult> GenerateQrCode(string deviceId, string registrationId)
         {
             var groupKey = string.Empty;
             var groupEnrollmentName = string.Empty;
-            if (string.IsNullOrEmpty(enrollmentId))
+
+            if (string.IsNullOrEmpty(registrationId))
             {
                 groupEnrollmentName = "SAS-IoT-Devices";
             }
             else
             {
-                groupEnrollmentName = enrollmentId;
+                groupEnrollmentName = registrationId;
             }
             QR_CODE_DATA qrCodeData = new QR_CODE_DATA()
             {
-                deviceId = registrationId,
+                deviceId = deviceId,
                 groupId = groupEnrollmentName
             };
 

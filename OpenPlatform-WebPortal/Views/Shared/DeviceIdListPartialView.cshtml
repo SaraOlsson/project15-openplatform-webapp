@@ -1,0 +1,10 @@
+﻿@model OpenPlatform_WebPortal.Models.HomeView
+
+<option value=""></option>
+@if (ViewBag.DeviceList != null)
+{
+    foreach (var item in ViewBag.DeviceList)
+    {
+        <option value="@item.Value">@item.Text</option>
+    }
+}

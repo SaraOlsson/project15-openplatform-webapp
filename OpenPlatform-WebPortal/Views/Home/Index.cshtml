@@ -14,7 +14,7 @@
             <label style="font-weight:500;">Select Device ID</label>
         </div>
         <div style="max-width:inherit;">
-            @Html.DropDownListFor(model => Model.deviceId, new SelectList(Model.deviceList, "Value", "Text"), new { @id = "deviceList" })
+            @Html.DropDownListFor(model => Model.deviceList, ViewBag.DeviceList as SelectList, "", new { @id = "deviceList" })
         </div>
     </fieldset>
 
@@ -177,8 +177,17 @@
             <label for="enrollmentList" id="EnrollmentType" style="font-weight:500;">DPS Enrollment</label>
         </div>
         <div style="max-width:inherit;">
-            @Html.DropDownListFor(model => Model.registrationId, new SelectList(Model.enrollmentList, "Value", "Text"), new { @id = "enrollmentList" })
-            @Html.CheckBoxFor(model => Model.isGroup, new {@id = "IsGroupEnrollment", style = "display:none"})
+            <select id="enrollmentList">
+                <option value=""></option>
+                @if (ViewBag.EnrollmentList != null)
+                {
+
+                    foreach (var item in ViewBag.EnrollmentList.EnrollmentList)
+                    {
+                        <option value="@item.RegistrationId" data-isGroup="@item.isGroup">@item.RegistrationId</option>
+                    }
+                }
+            </select>
         </div>
         <table style="width:100%;">
             <tr>
@@ -368,10 +377,7 @@ Main Page
                     <textares>A case-sensitive string (up to 128 characters long) of alphanumeric characters plus certain special characters.</textares>
                     <br>
                     <textares>- . + % _ # * ? ! ( ) , : = &amp; $ '</textares>
-                </div>
-                <div class="modal-body">
-                    @using (Html.BeginForm("AddIoTHubDevice", "IoTHubDps", FormMethod.Post, new { @id = "NewDeviceForm" }))
-                    {
+                    <div style="margin-top:1em">
                         @Html.TextBoxFor(m => Model.newDeviceId, new
                         {
                             @class = "form-control input-md",
@@ -379,7 +385,7 @@ Main Page
                             placeholder = "Enter new device ID",
                             Required = "required"
                         })
-                    }
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" id="btnAddIoTHubDevice" style="max-width:30%;min-width:120px;padding:3.5px;"><i class="fas fa-plus"></i>Add</button>
@@ -484,9 +490,9 @@ Main Page
                         <div>
                             <table style="text-align: center;">
                                 @*<tr>
-                                    <th>iOS App</th>
-                                    <th>Android App</th>
-                                </tr>*@
+                                        <th>iOS App</th>
+                                        <th>Android App</th>
+                                    </tr>*@
                                 <tr>
                                     <td><a href="https://apps.apple.com/app/iot-plug-and-play/id1563783687" target="_blank"><img src="/images/applestore.png" alt="Apple Store" style="height:2em"></a></td>
                                     <td><a href="https://play.google.com/store/apps/details?id=com.iot_pnp" target="_blank"><img src="/images/GooglePlay.png" alt="Google Play" style="height: 2em"></a></td>
@@ -496,8 +502,8 @@ Main Page
                                     <td><img src="/images/GooglePlayQR.png" alt="Google Play" style="height:8em"></td>
                                 </tr>
                             </table>
-                           
-                            
+
+
                         </div>
                         <div style="font-size:0.9em">
                             <a href="https://docs.microsoft.com/azure/iot-fundamentals/iot-phone-app-how-to">Learn more about Phone as a Device</a>
@@ -528,12 +534,12 @@ Main Page
                                    })
                             </div>
                             @*<div>
-                    <label for="groupEnrollmentList" style="font-weight:500;"><strong>Group Enrollment Name</strong></label>
-                </div>
+                                    <label for="groupEnrollmentList" style="font-weight:500;"><strong>Group Enrollment Name</strong></label>
+                                </div>
 
-                <div id="qrCodeDeviceId">
-                    &nbsp;
-                </div>*@
+                                <div id="qrCodeDeviceId">
+                                    &nbsp;
+                                </div>*@
 
                         }
                     </fieldset>
@@ -779,12 +785,11 @@ Script block to update Telemetry/Events grid
                 addEvent(jsonData.eventId, jsonData.eventType, jsonData.deviceId, jsonData.dtDataSchema, jsonData.eventSource, jsonData.eventTime, jsonData.data);
                 //console.log("Event Grid " + jsonData.eventSource);
                 if (jsonData.eventSource == 'Microsoft.Devices.DeviceCreated') {
-                    console.log("Device Added");
-                    var newOption = "<option value='" + jsonData.deviceId + "'>" + jsonData.deviceId + "</option>";
-                    $(newOption).insertAfter($('#deviceList option:last'));
-                    //$('#deviceList').val(jsonData.deviceId);
+                    console.log("Device Created");
+                    RefreshIoTHubDevices(500);
                 }
                 else if (jsonData.eventSource == 'Microsoft.Devices.DeviceDeleted') {
+                    RefreshIoTHubDevices(500);
                     console.log("Device Removed");
                 }
                 else if ((jsonData.eventSource == 'Microsoft.Devices.DeviceConnected') || (jsonData.eventSource == 'Microsoft.Devices.DeviceDisconnected')) {
@@ -882,7 +887,7 @@ Script block to update Telemetry/Events grid
                     url: '@Url.Action("DeleteIoTHubDevice", "IoTHubDps")',
                     data: { deviceId: targetDeviceId },
                     success: function (response) {
-                        $('#deviceList option:selected').remove();
+                        //$('#deviceList option:selected').remove();
                         enableDisableDeviceButtons(true);
                         clearDeviceInfo();
                     },
@@ -929,21 +934,18 @@ Script block to update Telemetry/Events grid
 
         // Delete enrollment
         $('#btnDeleteDpsEnrollment').click(function () {
-            var enrollmentId = $('#enrollmentList option:selected').text();
-            var isGroup = document.getElementById("IsGroupEnrollment").checked
+            var registrationId = $('#enrollmentList option:selected').text();
+            var isGroup = $('#enrollmentList option:selected').data('isgroup');
 
-            if (enrollmentId.length > 0) {
-                console.log("Deleting enrollment : " + enrollmentId);
+            if (registrationId.length > 0) {
+                console.log("Deleting enrollment : " + registrationId);
 
                 $.ajax({
                     type: "DELETE",
                     url: '@Url.Action("DeleteDpsEnrollment", "IoTHubDps")',
-                    data: { enrollmentId: enrollmentId, isGroup: isGroup },
+                    data: { registrationId: registrationId, isGroup: isGroup },
                     success: function (response) {
-                        $('#enrollmentList option:selected').remove();
-                        if (isGroup) {
-                            $('#groupEnrollmentList').find('option:contains(' + enrollmentId + ')').remove();
-                        }
+                        RefreshDpsEnrollments();
                         enableDisableEnrollmentButtons(true);
                         clearEnrollmentInfo();
                     },
@@ -1013,11 +1015,9 @@ Script block to update Telemetry/Events grid
                     url: '@Url.Action("AddDpsEnrollment", "IoTHubDps")',
                     data: { newRegistrationId: newRegId, isGroup : isGroup},
                     success: function (response) {
-                        var newOption = "<option value='" + newRegId + "'>" + newRegId + "</option>";
-                        $(newOption).insertBefore($('#enrollmentList option:last'));
-                        $('#enrollmentList').val(newRegId);
-                        getEnrollmentInfo(newRegId);
+                        getDpsEnrollmentInfo(newRegId);
                         enableDisableEnrollmentButtons(false);
+                        RefreshDpsEnrollments();
                     },
                     error: function (jqXHR) {
                         alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
@@ -1030,20 +1030,20 @@ Script block to update Telemetry/Events grid
         $('#btnGenerateQrCode').click(function () {
             console.log("Generating QR code");
             var newRegId = $('#qrCodeDeviceId').val();
-            var enrollmentId = $('#groupEnrollmentList option:selected').text();
+            var registrationId = $('#groupEnrollmentList option:selected').text();
 
             if (newRegId.length > 0) {
-                console.log("Enrollment " + enrollmentId + " Device Id " + newRegId);
+                console.log("Enrollment " + registrationId + " Device Id " + newRegId);
                 $.ajax({
                     type: "POST",
                     url: '@Url.Action("GenerateQrCode", "IoTHubDps")',
-                    data: { registrationId: newRegId, enrollmentId: enrollmentId },
+                    data: { registrationId: newRegId, registrationId: registrationId },
                     success: function (response) {
                         $('#qrCodeImage').attr("src", response.imageData);
                         //document.getElementById('qrCodeDeviceId').innerHTML = response.deviceId;
                         $('#btnGenerateQrCode').attr("disabled", true);
 
-                        if (enrollmentId == "") {
+                        if (registrationId == "") {
                             var newOption = "<option value='" + response.groupId + "'>" + response.groupId + "</option>";
                             $(newOption).insertBefore($('#groupEnrollmentList option:last'));
                             $(newOption).insertBefore($('#enrollmentList option:last'));
@@ -1089,6 +1089,42 @@ Script block to update Telemetry/Events grid
             }
         });
 
+        var RefreshIoTHubDevices = function (delay) {
+            console.log("Updating device list");
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("RefreshIoTHubDevices", "IoTHubDps")',
+                data: { delay: delay },
+                success: function (response) {
+                    //debugger
+                    console.log("New Device List");
+                    $("#deviceList").empty();
+                    $("#deviceList").append(response);
+                },
+                error: function (jqXHR) {
+                    alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
+                }
+            });
+        }
+
+        var RefreshDpsEnrollments = function (delay) {
+            console.log("Refreshing Dps Erollment");
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("RefreshDpsEnrollments", "IoTHubDps")',
+                data: { delay: delay },
+                success: function (response) {
+                    //debugger
+                    console.log("Enrollment List List");
+                    $("#enrollmentList").empty();
+                    $("#enrollmentList").append(response);
+                },
+                error: function (jqXHR) {
+                    alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
+                }
+            });
+        }
+
         var UpdateLocationInfo = function (dataName, displayName, coordinates) {
             var btnLocation = document.getElementById('btnLocationLegend');
             locationDataName = dataName;
@@ -1110,8 +1146,10 @@ Script block to update Telemetry/Events grid
         //
         $('#enrollmentList').change(function () {
             var registrationid = $('#enrollmentList option:selected').text();
+            var isGroup = $('#enrollmentList option:selected').data('isgroup') == "True";
+            console.log("Enrollment " + registrationid + " isGroup " + isGroup);
             if (registrationid.length > 0) {
-                getEnrollmentInfo(registrationid);
+                getDpsEnrollmentInfo(registrationid, isGroup);
                 enableDisableEnrollmentButtons(false);
             }
         });
@@ -1211,32 +1249,30 @@ Script block to update Telemetry/Events grid
         //
         // Get enrollment info
         //
-        var getEnrollmentInfo = function (enrollmentId) {
-            console.log("Getting enrollment " + enrollmentId);
-            getEnrollment(enrollmentId);
+        var getDpsEnrollmentInfo = function (registrationId, isGroup) {
+            getDpsEnrollment(registrationId, isGroup);
             enableDisableEnrollmentButtons(false);
         }
 
         //
         // Gets enrollment information.  Status and keys
         //
-        var getEnrollment = function (enrollmentId) {
+        var getDpsEnrollment = function (registrationId, isGroup) {
+
             $.ajax({
                 type: "GET",
                 url: '@Url.Action("GetDpsEnrollment", "IoTHubDps")',
-                data: { registrationId: enrollmentId },
+                data: { registrationId: registrationId , isGroup : isGroup},
                 success: function (response) {
                     console.log(response)
                     document.getElementById("enrollmentStatus").innerHTML = response.status;
                     enrollmentKeyPrimary = response.primaryKey;
                     enrollmentKeySeconary = response.secondaryKey;
-                    if (response.isGroup) {
+                    if (isGroup) {
                         document.getElementById('EnrollmentType').innerHTML = "Group Enrollment"
-                        document.getElementById('IsGroupEnrollment').checked  = true;
                     }
                     else {
                         document.getElementById('EnrollmentType').innerHTML = "Individual Enrollment"
-                        document.getElementById('IsGroupEnrollment').checked = false;
                     }
 
                     return true;
@@ -1279,6 +1315,11 @@ Script block to update Telemetry/Events grid
             deviceKeyPrimary = ""
             deviceKeySecondary = ""
             deviceConnectionString = "";
+            var telemetrySelection = document.getElementById("telemetryList");
+
+            while (telemetrySelection.options.length > 0) {
+                telemetrySelection.remove(0);
+            }
         }
 
         //
@@ -1538,7 +1579,7 @@ Script block to update Telemetry/Events grid
                                     var valueList = document.createElement("select");
                                     valueList.name = valueId;
                                     valueList.setAttribute('style', 'width : 100% ; margin-left:0.5em; height:1.7em');
-                                    
+
                                     var enumOptions = [];
 
                                     valueList.id = valueId;

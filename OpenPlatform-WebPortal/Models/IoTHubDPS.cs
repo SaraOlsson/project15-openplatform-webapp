@@ -50,6 +50,7 @@ namespace OpenPlatform_WebPortal.Models
             public string deviceConnectionString { get; set; }
             public string deviceModelId { get; set; }
             public List<TELEMETRY_DATA> telemetry { get; set; }
+            public bool isEdge { get; set; }
         }
 
         public class DPS_ENROLLMENT_DATA
@@ -58,7 +59,6 @@ namespace OpenPlatform_WebPortal.Models
             public string primaryKey { get; set; }
             public string secondaryKey { get; set; }
             public string status { get; set; }
-            public bool isGroup { get; set; }
         }
 
         public class QR_CODE_DATA
