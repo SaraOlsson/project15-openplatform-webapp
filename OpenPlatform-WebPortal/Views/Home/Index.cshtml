@@ -718,7 +718,7 @@ Script block to update Telemetry/Events grid
 
                             lng = parseFloat(telemetryJson[locationDataName].coordinates[0]);
                             lat = parseFloat(telemetryJson[locationDataName].coordinates[1]);
-                            txtCoordinates = telemetryJson[locationDataName].coordinates[0] + "," + telemetryJson[locationDataName].coordinates[1];
+                            txtCoordinates = telemetryJson[locationDataName].coordinates[1] + "," + telemetryJson[locationDataName].coordinates[0];
 
                         }
                         else
