@@ -43,7 +43,7 @@ namespace Portal.Controllers
             ViewData["DpsIdScope"] = _appSettings.Dps.IdScope.ToString();
             ViewData["tilesetId"] = _appSettings.AzureMap.TilesetId;
             ViewData["statesetId"] = _appSettings.AzureMap.StatesetId;
-            ViewBag.EnrollmentList = await _helper.GetDpsEnrollments2();
+            ViewBag.EnrollmentList = await _helper.RefreshDpsEnrollments();
             ViewBag.DeviceList = await _helper.GetIoTHubDevices();
             return View(homeView);
         }

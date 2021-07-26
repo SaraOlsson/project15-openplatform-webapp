@@ -34,7 +34,7 @@ namespace OpenPlatform_WebPortal.Helper
         Task<EnrollmentGroup> GetDpsGroupEnrollment(string enrollmentGroupId);
         Task<IEnumerable<SelectListItem>> GetDpsGroupEnrollments();
         Task<IEnumerable<SelectListItem>> GetDpsEnrollments();
-        Task<EnrollmentListSelectorViewModel> GetDpsEnrollments2();
+        Task<EnrollmentListSelectorViewModel> RefreshDpsEnrollments();
         Task<IEnumerable<SelectListItem>> GetDpsIndividualEnrollments();
         Task<IndividualEnrollment> GetDpsIndividualEnrollment(string registrationId);
         Task<AttestationMechanism> GetDpsAttestationMechanism(string registrationId, bool isGroup);
@@ -315,7 +315,7 @@ namespace OpenPlatform_WebPortal.Helper
             return enrollmentList;
         }
 
-        public async Task<EnrollmentListSelectorViewModel> GetDpsEnrollments2()
+        public async Task<EnrollmentListSelectorViewModel> RefreshDpsEnrollments()
         {
             var enrollmentList = new EnrollmentListSelectorViewModel();
 

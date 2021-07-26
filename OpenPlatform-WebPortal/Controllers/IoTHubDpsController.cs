@@ -366,7 +366,7 @@ namespace OpenPlatform_WebPortal.Controllers
         [HttpGet]
         public async Task<ActionResult> RefreshDpsEnrollments()
         {
-            var enrollmentList = await _helper.GetDpsEnrollments2();
+            var enrollmentList = await _helper.RefreshDpsEnrollments();
             ViewBag.EnrollmentList = enrollmentList;
             return PartialView("EnrollmentListPartialView");
         }
