@@ -524,6 +524,11 @@ namespace OpenPlatform_WebPortal.Controllers
                 {
                     return StatusCode(500, new { message = "Could not create Group Enrollment"});
                 }
+                else
+                {
+                    // give a short wait..
+                    Thread.Sleep(1000);
+                }
             }
 
             AttestationMechanism attestationMechanism = await _helper.GetDpsAttestationMechanism(qrCodeData.groupId, true).ConfigureAwait(false);
