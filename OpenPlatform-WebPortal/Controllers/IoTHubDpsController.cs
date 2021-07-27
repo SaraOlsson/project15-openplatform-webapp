@@ -540,7 +540,7 @@ namespace OpenPlatform_WebPortal.Controllers
                 groupKey = attestation.PrimaryKey;
             }
 
-            var token = GenerateSymmetricKey(registrationId, groupKey);
+            var token = GenerateSymmetricKey(deviceId, groupKey);
             var qrString = String.Format("{{\"deviceId\":\"{0}\",\"scopeId\":\"{1}\",\"deviceKey\":\"{2}\"}}", deviceId, _appSettings.Dps.IdScope, token);
             var qrStringBytes = System.Text.Encoding.UTF8.GetBytes(qrString);
             var base64qrString = Convert.ToBase64String(qrStringBytes);
