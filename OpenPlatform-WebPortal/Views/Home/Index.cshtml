@@ -1029,15 +1029,15 @@ Script block to update Telemetry/Events grid
 
         $('#btnGenerateQrCode').click(function () {
             console.log("Generating QR code");
-            var newRegId = $('#qrCodeDeviceId').val();
+            var deviceId = $('#qrCodeDeviceId').val();
             var registrationId = $('#groupEnrollmentList option:selected').text();
 
-            if (newRegId.length > 0) {
-                console.log("Enrollment " + registrationId + " Device Id " + newRegId);
+            if (deviceId.length > 0) {
+                console.log("Enrollment " + registrationId + " Device Id " + deviceId);
                 $.ajax({
                     type: "POST",
                     url: '@Url.Action("GenerateQrCode", "IoTHubDps")',
-                    data: { registrationId: newRegId, registrationId: registrationId },
+                    data: { deviceId: deviceId, registrationId: registrationId },
                     success: function (response) {
                         $('#qrCodeImage').attr("src", response.imageData);
                         //document.getElementById('qrCodeDeviceId').innerHTML = response.deviceId;
