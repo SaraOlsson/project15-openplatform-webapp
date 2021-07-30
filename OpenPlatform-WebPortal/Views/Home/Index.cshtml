@@ -653,12 +653,12 @@ Script block to update Telemetry/Events grid
             map = new atlas.Map('map-id', {
                 center: [-122.139192, 47.647472],
                 zoom: 19,
-                //language: 'en-US',
-                //showLogo: false,
-                //renderWorldCopies: true,
+                language: 'en-US',
+                showLogo: false,
+                renderWorldCopies: false,
                 view: 'Auto',
-                //showBuildingModels: true,
-                //showFeedbackLink: false,
+                showBuildingModels: true,
+                showFeedbackLink: false,
                 style: "satellite_road_labels",
                 authOptions: {
                     authType: 'subscriptionKey',
@@ -974,10 +974,9 @@ Script block to update Telemetry/Events grid
         $('#btnShowQrCodePopup').click(function () {
             $('#btnGenerateQrCode').attr("disabled", false);
             $('#qrCodeDeviceId').val("");
-            $('#qrCodeImage').src = "#";
+            $('#qrCodeImage').attr("src", "");
             $('#ModalGenrateQrCode').modal('show');
         })
-
 
         $('#ModalCreateDpsEnrollment').on('shown.bs.modal', function (e) {
             $('#newRegistrationId').focus();
