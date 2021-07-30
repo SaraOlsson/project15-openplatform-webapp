@@ -1,0 +1,10 @@
+﻿@model OpenPlatform_WebPortal.Models.DpsGroupEnrollmentListViewModel
+
+<option value=""></option>
+@if (ViewBag.DpsGroupEnrollmentList != null)
+{
+    foreach (var item in ViewBag.DpsGroupEnrollmentList.Enrollments)
+    {
+        <option value="@item.RegistrationId" data-isGroup="@item.isGroup">@item.RegistrationId</option>
+    }
+}

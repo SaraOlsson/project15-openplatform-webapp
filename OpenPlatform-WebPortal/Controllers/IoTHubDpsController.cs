@@ -285,7 +285,8 @@ namespace OpenPlatform_WebPortal.Controllers
             {
                 if (deviceId != null)
                 {
-                    await _helper.AddIoTHubDevice(deviceId);
+                    ViewBag.IoTHubDeviceList = await _helper.AddIoTHubDevice(deviceId);
+                    return PartialView("IoTHubDeviceListPartialView");
                 }
             }
             catch (Exception e)
@@ -297,14 +298,16 @@ namespace OpenPlatform_WebPortal.Controllers
             return Ok();
         }
 
+        // Refresh Device List from IoT Hub
         [HttpGet]
-        public async Task<ActionResult> RefreshIoTHubDevices(int delay)
+        public async Task<ActionResult> RefreshIoTHubDevices(int delay, string selectedDevice)
         {
             try
             {
                 Thread.Sleep(delay);
-                ViewBag.DeviceList = await _helper.GetIoTHubDevices();
-                return PartialView("DeviceIdListPartialView");
+                ViewBag.IoTHubDeviceList = await _helper.GetIoTHubDevices();
+                ViewBag.IoTHubDeviceList.SelectedIoTHubDevice = selectedDevice;
+                return PartialView("IoTHubDeviceListPartialView");
             }
             catch (Exception e)
             {
@@ -367,8 +370,16 @@ namespace OpenPlatform_WebPortal.Controllers
         public async Task<ActionResult> RefreshDpsEnrollments()
         {
             var enrollmentList = await _helper.RefreshDpsEnrollments();
-            ViewBag.EnrollmentList = enrollmentList;
-            return PartialView("EnrollmentListPartialView");
+            ViewBag.DpsEnrollmentList = enrollmentList;
+            return PartialView("DpsEnrollmentListPartialView");
+        }
+
+        [HttpGet]
+        public async Task<ActionResult> RefreshDpsGroupEnrollments()
+        {
+            var enrollmentList = await _helper.RefreshDpsGroupEnrollments();
+            ViewBag.DpsGroupEnrollmentList = enrollmentList;
+            return PartialView("DpsGroupEnrollmentListPartialView");
         }
         //
         // Retrieves individual entrollment info.
@@ -429,8 +440,15 @@ namespace OpenPlatform_WebPortal.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError($"Exception in getDpsEnrollment() : {e.Message}");
-                return StatusCode(400, new { message = $"Failed to get enrollment {registrationId}. {e.Message}" });
+                _logger.LogError($"Exception in GetDpsEnrollment() : {e.InnerException.Message}");
+                if (e.InnerException != null)
+                {
+                    return StatusCode(400, new { message = e.InnerException.Message });
+                }
+                else
+                {
+                    return StatusCode(400, new { message = e.Message });
+                }
             }
 
             return Json(enrollmentData);
@@ -442,18 +460,52 @@ namespace OpenPlatform_WebPortal.Controllers
         public async Task<ActionResult> AddDpsEnrollment(string newRegistrationId, bool isGroup)
         {
             bool bCreated = false;
+            DpsEnrollmentListViewModel enrollmentList = null;
 
             try
             {
                 bCreated = await _helper.AddDpsEnrollment(newRegistrationId, isGroup);
+            
+                if (bCreated)
+                {
+					bool bFound = false;
+
+					while (!bFound)
+					{
+						enrollmentList = await _helper.RefreshDpsEnrollments();
+
+						foreach (var item in enrollmentList.Enrollments)
+						{
+							if (item.RegistrationId == newRegistrationId && item.isGroup == isGroup)
+							{
+								enrollmentList.SelectedEnrollment = newRegistrationId;
+                                ViewBag.DpsEnrollmentList = enrollmentList;
+                                bFound = true;
+								break;
+							}
+						}
+
+						if (bFound != true)
+						{
+							Thread.Sleep(100);
+						}
+					}
+                }
             }
             catch (Exception e)
             {
                 _logger.LogError($"Exception in AddDpsEnrollment() : {e.InnerException.Message}");
-                return StatusCode(400, new { message = e.Message });
+                if (e.InnerException != null)
+                {
+                    return StatusCode(400, new { message = e.InnerException.Message });
+                }
+                else
+                {
+                    return StatusCode(400, new { message = e.Message });
+                }
             }
-            return Ok();
 
+            return PartialView("DpsEnrollmentListPartialView");
         }
 
         // Delete a device enrollment record
@@ -462,18 +514,62 @@ namespace OpenPlatform_WebPortal.Controllers
         public async Task<ActionResult> DeleteDpsEnrollment(string registrationId, bool isGroup)
         {
             bool bDeleted = false;
+            DpsEnrollmentListViewModel enrollmentList = null;
 
             try
             {
                 bDeleted = await _helper.DeleteDpsEnrollment(registrationId, isGroup);
+
+                if (bDeleted)
+                {
+					bool bFound = true;
+
+					while (bFound)
+					{
+						enrollmentList = await _helper.RefreshDpsEnrollments();
+
+                        if (enrollmentList.Enrollments.Count == 0)
+                        {
+                            bFound = false;
+                            break;
+                        }
+
+						foreach (var item in enrollmentList.Enrollments)
+						{
+							if (item.RegistrationId == registrationId)
+							{
+								bFound = true;
+                                break;
+							}
+                            else
+                            {
+                                bFound = false;
+                            }
+						}
+
+						if (bFound == true)
+						{
+							Thread.Sleep(100);
+						}
+					}
+                    ViewBag.DpsEnrollmentList = enrollmentList;
+                }
+
             }
             catch (Exception e)
             {
-                _logger.LogError($"Exception in AddDpsEnrollment() : {e.InnerException.Message}");
-                return StatusCode(400, new { message = e.Message });
+                _logger.LogError($"Exception in DeleteDpsEnrollment() : {e.InnerException.Message}");
+                if (e.InnerException != null)
+                {
+                    return StatusCode(400, new { message = e.InnerException.Message });
+                }
+                else
+                {
+                    return StatusCode(400, new { message = e.Message });
+                }
             }
 
-            return Ok();
+            return PartialView("DpsEnrollmentListPartialView");
         }
         #endregion // DPS
 
@@ -518,9 +614,9 @@ namespace OpenPlatform_WebPortal.Controllers
 
             if (groupEnrollment == null)
             {
-                bool isCreated = await _helper.AddDpsEnrollment(qrCodeData.groupId, true);
+                var enrollmentList = await _helper.AddDpsEnrollment(qrCodeData.groupId, true);
 
-                if (isCreated != true)
+                if (enrollmentList == null)
                 {
                     return StatusCode(500, new { message = "Could not create Group Enrollment"});
                 }

@@ -31,9 +31,6 @@ namespace Portal.Controllers
         public async Task<IActionResult> Index()
         {
             HomeView homeView = _homeView;
-            homeView.deviceList = await _helper.GetIoTHubDevices();
-            homeView.enrollmentList = await _helper.GetDpsEnrollments();
-            homeView.groupEnrollmentList = await _helper.GetDpsGroupEnrollments();
             ViewData["IoTHubName"] = _helper.GetIoTHubName(_appSettings.IoTHub.ConnectionString);
             ViewData["mapKey"] = _appSettings.AzureMap.MapKey.ToString();
             ViewData["TsiClientId"] = _appSettings.TimeSeriesInsights.clientId.ToString();
@@ -43,25 +40,19 @@ namespace Portal.Controllers
             ViewData["DpsIdScope"] = _appSettings.Dps.IdScope.ToString();
             ViewData["tilesetId"] = _appSettings.AzureMap.TilesetId;
             ViewData["statesetId"] = _appSettings.AzureMap.StatesetId;
-            ViewBag.EnrollmentList = await _helper.RefreshDpsEnrollments();
-            ViewBag.DeviceList = await _helper.GetIoTHubDevices();
+            ViewBag.DpsEnrollmentList = await _helper.RefreshDpsEnrollments();
+            ViewBag.DpsGroupEnrollmentList = await _helper.RefreshDpsGroupEnrollments();
+            ViewBag.IoTHubDeviceList = await _helper.GetIoTHubDevices();
             return View(homeView);
         }
 
-        public async Task<ActionResult> RefreshIoTHubDevices2()
-        {
-            _homeView.deviceList = await _helper.GetIoTHubDevices();
-
-            return PartialView("deviceListPartial", _homeView.deviceList);
-        }
-
-        [HttpGet]
-        public async Task<ActionResult> RefreshIoTHubDevices()
-        {
-            _homeView.deviceList = await _helper.GetIoTHubDevices();
-
-            return PartialView("deviceListPartial", _homeView.deviceList);
-        }
+        //[HttpGet]
+        //public async Task<ActionResult> RefreshIoTHubDevices()
+        //{
+        //    var deviceList = await _helper.GetIoTHubDevices();
+        //    ViewBag.IoTHubDeviceList = deviceList;
+        //    return PartialView("IoTHubDeviceListViewModel");
+        //}
 
         public IActionResult Privacy()
         {

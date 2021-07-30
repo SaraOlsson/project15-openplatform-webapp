@@ -14,25 +14,59 @@ namespace OpenPlatform_WebPortal.Models
         public IEnumerable<SelectListItem> moduleList { get; set; }
         public string newDeviceId { get; set; }
         public string registrationId { get; set; }
-        public IEnumerable<SelectListItem> enrollmentList { get; set; }
-        public EnrollmentListSelectorViewModel enrollmentList2 { get; set; }
-        public IEnumerable<SelectListItem> groupEnrollmentList { get; set; }
+        public DpsEnrollmentListViewModel dpsEnrollmentList { get; set; }
+        public DpsEnrollmentListViewModel dpsGroupEnrollmentList { get; set; }
     }
 
-    public class EnrollmentListSelectorViewModel
+    public class IoTHubDeviceListViewModel
     {
-        public EnrollmentListSelectorViewModel()
+        public IoTHubDeviceListViewModel()
         {
-            EnrollmentList = new List<EnrollmentListViewModel>();
+            Devices = new List<IoTHubDeviceViewModel>();
+        }
+
+        [Display(Name = "IoT Hub Device List")]
+        [Required]
+        public string SelectedIoTHubDevice { get; set; }
+        public IList<IoTHubDeviceViewModel> Devices { get; set; }
+    }
+
+    public class IoTHubDeviceViewModel
+    {
+        public string DeviceId { get; set; }
+        public string AuthenticationType {get;set;}
+        public bool IsEdge {get;set;}
+        public string ModelId {get;set;}
+        public string Status {get;set;}
+    }
+
+    public class DpsEnrollmentListViewModel
+    {
+        public DpsEnrollmentListViewModel()
+        {
+            Enrollments = new List<EnrollmentViewModel>();
         }
 
         [Display(Name = "DPS Enrollment List")]
         [Required]
         public string SelectedEnrollment { get; set; }
-        public IList<EnrollmentListViewModel> EnrollmentList { get; set; }
+        public IList<EnrollmentViewModel> Enrollments { get; set; }
     }
 
-    public class EnrollmentListViewModel
+    public class DpsGroupEnrollmentListViewModel
+    {
+        public DpsGroupEnrollmentListViewModel()
+        {
+            Enrollments = new List<EnrollmentViewModel>();
+        }
+
+        [Display(Name = "DPS Group Enrollment List")]
+        [Required]
+        public string SelectedEnrollment { get; set; }
+        public IList<EnrollmentViewModel> Enrollments { get; set; }
+    }
+
+    public class EnrollmentViewModel
     {
         public string RegistrationId { get; set; }
         public bool isGroup { get; set; }

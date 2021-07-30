@@ -1,0 +1,17 @@
+﻿@model OpenPlatform_WebPortal.Models.DpsEnrollmentListViewModel
+
+<option value=""></option>
+@if (ViewBag.DpsEnrollmentList != null)
+{
+    foreach (var item in ViewBag.DpsEnrollmentList.Enrollments)
+    {
+        if (ViewBag.DpsEnrollmentList.SelectedEnrollment != null && ViewBag.DpsEnrollmentList.SelectedEnrollment == item.RegistrationId)
+        {
+            <option value="@item.RegistrationId" data-isGroup="@item.isGroup" selected="selected">@item.RegistrationId</option>
+        }
+        else
+        {
+            <option value="@item.RegistrationId" data-isGroup="@item.isGroup">@item.RegistrationId</option>
+        }
+    }
+}

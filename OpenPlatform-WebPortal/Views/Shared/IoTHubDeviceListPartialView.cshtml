@@ -1,0 +1,17 @@
+﻿@model OpenPlatform_WebPortal.Models.IoTHubDeviceListViewModel
+
+<option value=""></option>
+@if (ViewBag.IoTHubDeviceList != null)
+{
+    foreach (var item in ViewBag.IoTHubDeviceList.Devices)
+    {
+        if (ViewBag.IoTHubDeviceList.SelectedIoTHubDevice != null && ViewBag.IoTHubDeviceList.SelectedIoTHubDevice == item.DeviceId)
+        {
+            <option value="@item.DeviceId" data-isEdge="@item.IsEdge" data-ModelId="@item.ModelId" data-Status="@item.Status" selected="selected">@item.DeviceId</option>
+        }
+        else
+        {
+            <option value="@item.DeviceId" data-isEdge="@item.IsEdge" data-ModelId="@item.ModelId" data-Status="@item.Status">@item.DeviceId</option>
+        }
+    }
+}

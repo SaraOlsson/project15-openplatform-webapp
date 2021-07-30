@@ -11,10 +11,19 @@
     <fieldset style="height:100%;">
         <legend class="inner"><strong>Device Selection</strong></legend>
         <div>
-            <label style="font-weight:500;">Select Device ID</label>
+            <label style="font-weight:500;" for="iotHubDeviceList">Select Device ID</label>
         </div>
         <div style="max-width:inherit;">
-            @Html.DropDownListFor(model => Model.deviceList, ViewBag.DeviceList as SelectList, "", new { @id = "deviceList" })
+            <select id="iotHubDeviceList">
+                <option value=""></option>
+                @if (ViewBag.IoTHubDeviceList != null)
+                {
+                    foreach (var item in ViewBag.IoTHubDeviceList.Devices)
+                    {
+                        <option value="@item.DeviceId" data-isEdge="@item.IsEdge" data-ModelId="@item.ModelId" data-Status="@item.Status">@item.DeviceId</option>
+                    }
+                }
+            </select>
         </div>
     </fieldset>
 
@@ -174,17 +183,23 @@
     <fieldset style="height:100%;">
         <legend class="inner"><strong>Device Provisioning</strong></legend>
         <div>
-            <label for="enrollmentList" id="EnrollmentType" style="font-weight:500;">DPS Enrollment</label>
+            <label for="dpsEnrollmentList" id="EnrollmentType" style="font-weight:500;">DPS Enrollment</label>
         </div>
         <div style="max-width:inherit;">
-            <select id="enrollmentList">
+            <select id="dpsEnrollmentList">
                 <option value=""></option>
-                @if (ViewBag.EnrollmentList != null)
+                @if (ViewBag.DpsEnrollmentList != null)
                 {
-
-                    foreach (var item in ViewBag.EnrollmentList.EnrollmentList)
+                    foreach (var item in ViewBag.DpsEnrollmentList.Enrollments)
                     {
-                        <option value="@item.RegistrationId" data-isGroup="@item.isGroup">@item.RegistrationId</option>
+                        if (ViewBag.DpsEnrollmentList.SelectedEnrollment != null && ViewBag.DpsEnrollmentList.SelectedEnrollment == item.RegistrationId)
+                        {
+                            <option value="@item.RegistrationId" data-isGroup="@item.isGroup" selected="selected">@item.RegistrationId</option>
+                        }
+                        else
+                        {
+                            <option value="@item.RegistrationId" data-isGroup="@item.isGroup">@item.RegistrationId</option>
+                        }
                     }
                 }
             </select>
@@ -515,24 +530,36 @@ Main Page
 
                         @using (Html.BeginForm("GetQrCode", "IoTHubDps", FormMethod.Post, new { @id = "QRCodeForm" }))
                         {
+                        <div style="max-width:inherit;">
+
+                            <label for="dpsGroupEnrollmentList" style="font-weight:500;"><strong>Group Enrollment Name</strong></label>
                             <div style="max-width:inherit;">
-
-                                <label for="groupEnrollmentList" style="font-weight:500;"><strong>Group Enrollment Name</strong></label>
-                                <div style="max-width:inherit;">
-                                    Select DPS Group Enrollment to use.<br />If you do not have one, leave this empty.  This will create a new group enrollment called "SAS-IoT-Devices"
-                                </div>
-
-                                @Html.DropDownListFor(model => Model.registrationId, new SelectList(Model.groupEnrollmentList, "Value", "Text"), new { @id = "groupEnrollmentList" })
-                                <label for="groupId" style="font-weight:500;"><strong>Device ID</strong></label>
-
-                                @Html.TextBoxFor(m => Model.newDeviceId, new
-                                   {
-                                       @class = "form-control input-md",
-                                       @id = "qrCodeDeviceId",
-                                       placeholder = "Enter new Device ID",
-                                       Required = "required",
-                                   })
+                                Select DPS Group Enrollment to use.<br />If you do not have one, leave this empty.  This will create a new group enrollment called "SAS-IoT-Devices"
                             </div>
+                            <div style="max-width:inherit;">
+                                <select id="dpsGroupEnrollmentList">
+                                    <option value=""></option>
+                                    @if (ViewBag.DpsGroupEnrollmentList != null)
+                                    {
+                                        foreach (var item in ViewBag.DpsGroupEnrollmentList.Enrollments)
+                                        {
+                                            <option value="@item.RegistrationId">@item.RegistrationId</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+
+                            @* @Html.DropDownListFor(model => Model.registrationId, new SelectList(Model.groupEnrollmentList, "Value", "Text"), new { @id = "groupEnrollmentList" })*@
+                            <label for="groupId" style="font-weight:500;"><strong>Device ID</strong></label>
+
+                            @Html.TextBoxFor(m => Model.newDeviceId, new
+                               {
+                                   @class = "form-control input-md",
+                                   @id = "qrCodeDeviceId",
+                                   placeholder = "Enter new Device ID",
+                                   Required = "required",
+                               })
+                        </div>
                             @*<div>
                                     <label for="groupEnrollmentList" style="font-weight:500;"><strong>Group Enrollment Name</strong></label>
                                 </div>
@@ -625,13 +652,13 @@ Script block to update Telemetry/Events grid
             // Initialize Azure Map
             map = new atlas.Map('map-id', {
                 center: [-122.139192, 47.647472],
-                zoom: 1,
-                language: 'en-US',
-                showLogo: false,
-                renderWorldCopies: true,
-                view: "Auto",
-                showBuildingModels: true,
-                showFeedbackLink: false,
+                zoom: 19,
+                //language: 'en-US',
+                //showLogo: false,
+                //renderWorldCopies: true,
+                view: 'Auto',
+                //showBuildingModels: true,
+                //showFeedbackLink: false,
                 style: "satellite_road_labels",
                 authOptions: {
                     authType: 'subscriptionKey',
@@ -640,55 +667,47 @@ Script block to update Telemetry/Events grid
             });
 
             map.events.add('ready', function () {
+
+                map.controls.add([
+                    new atlas.control.ZoomControl(),
+                    new atlas.control.CompassControl(),
+                    new atlas.control.PitchControl(),
+                    new atlas.control.StyleControl()
+                ],
+                    {
+                        position: "top-left"
+                    }
+                )
+
                 mapDatasource = new atlas.source.DataSource();
-            })
 
-            if (statesetId.length > 0 && tilesetId.length > 0) {
+                if (statesetId.length > 0 && tilesetId.length > 0) {
 
-                console.log("state set %s", statesetId);
-                console.log("tile set %s", tilesetId);
-                const levelControl = new atlas.control.LevelControl({
-                    position: "top-left",
-                });
+                    console.log("Stateset ID %s", statesetId);
+                    console.log("Tileset ID %s", tilesetId);
 
-                const indoorManager = new atlas.indoor.IndoorManager(map, {
-                    levelControl, //level picker
-                    tilesetId : tilesetId,
-                    statesetId : statesetId, //optional
-                });
+                    indoorManager = new atlas.indoor.IndoorManager(map, {
+                        levelControl: new atlas.control.LevelControl({ position: 'top-left' }),
+                        tilesetId: tilesetId,
+                        statesetId: statesetId // Optional
+                    });
 
-                indoorManager.setDynamicStyling(true);
+                    indoorManager.setDynamicStyling(true);
 
-                map.events.add("levelchanged", indoorManager, (eventData) => {
-                    //put code that runs after a level has been changed
-                    console.log("The level has changed:", eventData);
-                });
-                map.events.add("facilitychanged", indoorManager, (eventData) => {
-                    //put code that runs after a facility has been changed
-                    console.log("The facility has changed:", eventData);
-                });
-
-                map.events.add("click", function (e) {
-                    var features = map.layers.getRenderedShapes(e.position, "indoor");
-                    var result = features.reduce(function (ids, feature) {
-                        if (feature.layer.id == "indoor_unit_office") {
-                            console.log(feature);
-                        }
-                    },
-                    []);
-                });
+                    map.events.add("levelchanged", indoorManager, (eventData) => {
+                        //put code that runs after a level has been changed
+                        console.log("The level has changed:", eventData);
+                    });
+                    map.events.add("facilitychanged", indoorManager, (eventData) => {
+                        //put code that runs after a facility has been changed
+                        console.log("The facility has changed:", eventData);
+                    });
+                }
 
                 document.getElementById('divIndoorMap').style.display = 'inline';
-            }
 
-            map.controls.add([
-                new atlas.control.ZoomControl(),
-                new atlas.control.CompassControl(),
-                new atlas.control.PitchControl(),
-                new atlas.control.StyleControl()
-            ], {
-                position: "top-left"
-            });
+
+            })
 
             var clearEvents = document.getElementById('clear-events');
                 clearEvents.addEventListener('click', function () {
@@ -786,14 +805,16 @@ Script block to update Telemetry/Events grid
                 //console.log("Event Grid " + jsonData.eventSource);
                 if (jsonData.eventSource == 'Microsoft.Devices.DeviceCreated') {
                     console.log("Device Created");
-                    RefreshIoTHubDevices(500);
+                    var selectedDevice = $('#iotHubDeviceList option:selected').text();
+                    RefreshIoTHubDevices(500, selectedDevice);
                 }
                 else if (jsonData.eventSource == 'Microsoft.Devices.DeviceDeleted') {
+                    var selectedDevice = $('#iotHubDeviceList option:selected').text();
                     RefreshIoTHubDevices(500);
-                    console.log("Device Removed");
+                    RefreshIoTHubDevices(500, selectedDevice);
                 }
                 else if ((jsonData.eventSource == 'Microsoft.Devices.DeviceConnected') || (jsonData.eventSource == 'Microsoft.Devices.DeviceDisconnected')) {
-                    var targetDeviceId = $('#deviceList option:selected').text();
+                    var targetDeviceId = $('#iotHubDeviceList option:selected').text();
                     if (targetDeviceId == jsonData.deviceId) {
                         getDeviceInfo(jsonData.deviceId);
                     }
@@ -830,7 +851,7 @@ Script block to update Telemetry/Events grid
         //
         // Retrieve and display Device Twin
         $('#btnShowDeviceTwin').click(function () {
-            var targetDeviceId = $('#deviceList option:selected').text();
+            var targetDeviceId = $('#iotHubDeviceList option:selected').text();
 
             if (targetDeviceId.length > 0) {
                 console.log("Getting Device Twin for : " + deviceConnectionString);
@@ -874,27 +895,55 @@ Script block to update Telemetry/Events grid
             $('#newDeviceId').focus();
         });
 
+        //
+        // Adds a new IoT Device to IoT Hub
+        //
+        $('#btnAddIoTHubDevice').click(function () {
+            var deviceId = $('#newDeviceId').val();
+
+            if (deviceId.length > 0) {
+                disableDeviceList(true);
+                console.log("Adding a new IoT Hub device " + deviceId);
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("AddIoTHubDevice", "IoTHubDps")',
+                    data: { deviceId: deviceId },
+                    success: function (response) {
+                        $("#iotHubDeviceList").empty();
+                        $("#iotHubDeviceList").append(response);
+                    },
+                    error: function (jqXHR) {
+                        alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
+                    }
+                });
+                disableDeviceList(false);
+                $('#ModalCreateDevice').modal('hide');
+            }
+        });
+
         // Deletes an IoT device from IoT Hub
         $('#btnDeleteIoTHubDevice').click(function () {
-            var targetDeviceId = $('#deviceList option:selected').text();
 
-            if (targetDeviceId.length > 0) {
+            var deviceId = $('#iotHubDeviceList option:selected').text();
 
-                console.log("Deleting device : " + targetDeviceId);
+            if (deviceId.length > 0) {
+
+                console.log("Deleting device from IoT Hub : " + deviceId);
+                disableDeviceList(true);
 
                 $.ajax({
                     type: "DELETE",
                     url: '@Url.Action("DeleteIoTHubDevice", "IoTHubDps")',
-                    data: { deviceId: targetDeviceId },
+                    data: { deviceId: deviceId },
                     success: function (response) {
-                        //$('#deviceList option:selected').remove();
-                        enableDisableDeviceButtons(true);
+                        RefreshIoTHubDevices(500);
                         clearDeviceInfo();
                     },
                     error: function (jqXHR) {
                         alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
                     }
                 });
+                disableDeviceList(false);
             }
         });
 
@@ -924,6 +973,8 @@ Script block to update Telemetry/Events grid
         // Display QR Code
         $('#btnShowQrCodePopup').click(function () {
             $('#btnGenerateQrCode').attr("disabled", false);
+            $('#qrCodeDeviceId').val("");
+            $('#qrCodeImage').src = "#";
             $('#ModalGenrateQrCode').modal('show');
         })
 
@@ -934,8 +985,8 @@ Script block to update Telemetry/Events grid
 
         // Delete enrollment
         $('#btnDeleteDpsEnrollment').click(function () {
-            var registrationId = $('#enrollmentList option:selected').text();
-            var isGroup = $('#enrollmentList option:selected').data('isgroup');
+            var registrationId = $('#dpsEnrollmentList option:selected').text();
+            var isGroup = $('#dpsEnrollmentList option:selected').data('isgroup');
 
             if (registrationId.length > 0) {
                 console.log("Deleting enrollment : " + registrationId);
@@ -945,7 +996,8 @@ Script block to update Telemetry/Events grid
                     url: '@Url.Action("DeleteDpsEnrollment", "IoTHubDps")',
                     data: { registrationId: registrationId, isGroup: isGroup },
                     success: function (response) {
-                        RefreshDpsEnrollments();
+                        $("#dpsEnrollmentList").empty();
+                        $("#dpsEnrollmentList").append(response);
                         enableDisableEnrollmentButtons(true);
                         clearEnrollmentInfo();
                     },
@@ -979,29 +1031,6 @@ Script block to update Telemetry/Events grid
         });
 
         //
-        // Adds a new IoT Device to IoT Hub
-        //
-        $('#btnAddIoTHubDevice').click(function () {
-            var newDevice = $('#newDeviceId').val();
-
-            if (newDevice.length > 0) {
-                console.log("Add IoT Hub device " + newDevice);
-                $.ajax({
-                    type: "POST",
-                    url: '@Url.Action("AddIoTHubDevice", "IoTHubDps")',
-                    data: { deviceId: newDevice },
-                    success: function (response) {
-                        getDeviceInfo(newDevice);
-                    },
-                    error: function (jqXHR) {
-                        alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
-                    }
-                });
-                $('#ModalCreateDevice').modal('hide');
-            }
-        });
-
-        //
         // Adds a new individual enrollment to DPS
         //
         $('#btnAddDpsEnrollment').click(function () {
@@ -1015,9 +1044,10 @@ Script block to update Telemetry/Events grid
                     url: '@Url.Action("AddDpsEnrollment", "IoTHubDps")',
                     data: { newRegistrationId: newRegId, isGroup : isGroup},
                     success: function (response) {
+                        $("#dpsEnrollmentList").empty();
+                        $("#dpsEnrollmentList").append(response);
                         getDpsEnrollmentInfo(newRegId);
                         enableDisableEnrollmentButtons(false);
-                        RefreshDpsEnrollments();
                     },
                     error: function (jqXHR) {
                         alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
@@ -1043,11 +1073,10 @@ Script block to update Telemetry/Events grid
                         //document.getElementById('qrCodeDeviceId').innerHTML = response.deviceId;
                         $('#btnGenerateQrCode').attr("disabled", true);
 
-                        if (registrationId == "") {
-                            var newOption = "<option value='" + response.groupId + "'>" + response.groupId + "</option>";
-                            $(newOption).insertBefore($('#groupEnrollmentList option:last'));
-                            $(newOption).insertBefore($('#enrollmentList option:last'));
-                        }
+                        // We may have created a new group enrollment so refresh DPS Enrollment list
+                        RefreshDpsEnrollments();
+                        RefreshDpsGroupEnrollments();
+
                     },
                     error: function (jqXHR) {
                         alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
@@ -1069,19 +1098,18 @@ Script block to update Telemetry/Events grid
 
         // Refresh TSI Chart
         $('#btnRefreshTsi').click(function () {
-            var targetDeviceId = $('#deviceList option:selected').text();
+            var targetDeviceId = $('#iotHubDeviceList option:selected').text();
             runTsqPnP(targetDeviceId)
         })
 
         //
         // User selected a device
         //
-        $('#deviceList').change(function () {
-            var targetDeviceId = $('#deviceList option:selected').text();
+        $('#iotHubDeviceList').change(function () {
+            var targetDeviceId = $('#iotHubDeviceList option:selected').text();
             if (targetDeviceId.length > 0) {
                 console.log("device selected " + targetDeviceId);
                 getDeviceInfo(targetDeviceId);
-                //runTsqPnP(targetDeviceId);
             } else {
                 enableDisableDeviceButtons(true);
                 clearDeviceInfo();
@@ -1089,17 +1117,29 @@ Script block to update Telemetry/Events grid
             }
         });
 
-        var RefreshIoTHubDevices = function (delay) {
+        var SelectDeviceList = function (deviceId) {
+            var deviceList = document.getElementById('iotHubDeviceList');
+            for (var i = 0; i < deviceList.options.length; i++) {
+                if (deviceList.options[i].value == deviceId) {
+                    console.log("Found " + deviceId);
+                    deviceList.options[i].selected = true;
+                    return;
+                }
+            }
+        }
+
+        var RefreshIoTHubDevices = function (delay, selectedDevice) {
             console.log("Updating device list");
+            //var selectedDevice = $('#iotHubDeviceList option:selected').text();
             $.ajax({
                 type: "GET",
                 url: '@Url.Action("RefreshIoTHubDevices", "IoTHubDps")',
-                data: { delay: delay },
+                data: { delay: delay, selectedDevice:selectedDevice},
                 success: function (response) {
                     //debugger
                     console.log("New Device List");
-                    $("#deviceList").empty();
-                    $("#deviceList").append(response);
+                    $("#iotHubDeviceList").empty();
+                    $("#iotHubDeviceList").append(response);
                 },
                 error: function (jqXHR) {
                     alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
@@ -1107,17 +1147,35 @@ Script block to update Telemetry/Events grid
             });
         }
 
-        var RefreshDpsEnrollments = function (delay) {
+        var RefreshDpsEnrollments = function () {
             console.log("Refreshing Dps Erollment");
             $.ajax({
                 type: "GET",
                 url: '@Url.Action("RefreshDpsEnrollments", "IoTHubDps")',
-                data: { delay: delay },
+                data: {},
                 success: function (response) {
                     //debugger
-                    console.log("Enrollment List List");
-                    $("#enrollmentList").empty();
-                    $("#enrollmentList").append(response);
+                    console.log("Enrollment List");
+                    $("#dpsEnrollmentList").empty();
+                    $("#dpsEnrollmentList").append(response);
+                },
+                error: function (jqXHR) {
+                    alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
+                }
+            });
+        }
+
+        var RefreshDpsGroupEnrollments = function () {
+            console.log("Refreshing Dps Erollment");
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("RefreshDpsGroupEnrollments", "IoTHubDps")',
+                data: {},
+                success: function (response) {
+                    //debugger
+                    console.log("Enrollment List");
+                    $("#dpsGroupEnrollmentList").empty();
+                    $("#dpsGroupEnrollmentList").append(response);
                 },
                 error: function (jqXHR) {
                     alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
@@ -1144,12 +1202,12 @@ Script block to update Telemetry/Events grid
         //
         // User selected an enrollment
         //
-        $('#enrollmentList').change(function () {
-            var registrationid = $('#enrollmentList option:selected').text();
-            var isGroup = $('#enrollmentList option:selected').data('isgroup') == "True";
+        $('#dpsEnrollmentList').change(function () {
+            var registrationid = $('#dpsEnrollmentList option:selected').text();
+            var isGroup = $('#dpsEnrollmentList option:selected').data('isgroup') == "True";
             console.log("Enrollment " + registrationid + " isGroup " + isGroup);
             if (registrationid.length > 0) {
-                getDpsEnrollmentInfo(registrationid, isGroup);
+                getDpsEnrollmentInfo(registrationid);
                 enableDisableEnrollmentButtons(false);
             }
         });
@@ -1158,7 +1216,7 @@ Script block to update Telemetry/Events grid
         // User selected telemetry
         //
         $('#telemetryList').change(function () {
-            var targetDeviceId = $('#deviceList option:selected').text();
+            var targetDeviceId = $('#iotHubDeviceList option:selected').text();
             console.log("telemetryList change " + targetDeviceId);
             runTsqPnP(targetDeviceId)
         });
@@ -1249,15 +1307,19 @@ Script block to update Telemetry/Events grid
         //
         // Get enrollment info
         //
-        var getDpsEnrollmentInfo = function (registrationId, isGroup) {
-            getDpsEnrollment(registrationId, isGroup);
+        var getDpsEnrollmentInfo = function (registrationId) {
+
+            getDpsEnrollment(registrationId);
             enableDisableEnrollmentButtons(false);
         }
 
         //
         // Gets enrollment information.  Status and keys
         //
-        var getDpsEnrollment = function (registrationId, isGroup) {
+        var getDpsEnrollment = function (registrationId) {
+
+            let enrollment = $('#dpsEnrollmentList option:selected');
+            var isGroup = enrollment.data('isgroup') == "True";
 
             $.ajax({
                 type: "GET",
@@ -1282,6 +1344,14 @@ Script block to update Telemetry/Events grid
                     return false;
                 }
             });
+        }
+
+
+        //
+        // Enable/disable devlice selection list
+        //
+        var disableDeviceList = function (disableList) {
+            document.getElementById("iotHubDeviceList").disabled = disableList;
         }
 
         //
@@ -1667,7 +1737,7 @@ Script block to update Telemetry/Events grid
         function RunCommand(id) {
 
             var cmd = document.getElementById(id + '-command').getAttribute("value");
-            var targetDeviceId = $('#deviceList option:selected').text();
+            var targetDeviceId = $('#iotHubDeviceList option:selected').text();
 
             console.log("RunCommand ID " + id);
             var cmdTable = document.getElementById("cmdTable-" + id);
