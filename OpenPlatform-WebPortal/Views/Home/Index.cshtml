@@ -967,6 +967,8 @@ Script block to update Telemetry/Events grid
 
         // Add a new enrollment
         $('#btnShowAddDpsEnrollmentPopup').click(function () {
+            $('#isDpsGroupEnrollment').prop("checked", false);
+            $('#newRegistrationId').val("");
             $('#ModalCreateDpsEnrollment').modal('show');
         })
 
