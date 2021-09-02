@@ -300,6 +300,58 @@
             </tr>
         </table>
     </fieldset>
+
+    <!--------------------------------------------------
+    Edge Impulse
+    --------------------------------------------------->
+    <fieldset style="height:100%;">
+        <legend class="inner"><strong>Edge Impulse</strong></legend>
+        @*<div>
+            <label for="dpsEnrollmentList" id="EnrollmentType" style="font-weight:500;">Edge Impulse</label>
+        </div>
+        <div style="max-width:inherit;">
+            <select id="dpsEnrollmentList">
+                <option value=""></option>
+                @if (ViewBag.DpsEnrollmentList != null)
+                {
+                    foreach (var item in ViewBag.DpsEnrollmentList.Enrollments)
+                    {
+                        if (ViewBag.DpsEnrollmentList.SelectedEnrollment != null && ViewBag.DpsEnrollmentList.SelectedEnrollment == item.RegistrationId)
+                        {
+                            <option value="@item.RegistrationId" data-isGroup="@item.isGroup" selected="selected">@item.RegistrationId</option>
+                        }
+                        else
+                        {
+                            <option value="@item.RegistrationId" data-isGroup="@item.isGroup">@item.RegistrationId</option>
+                        }
+                    }
+                }
+            </select>
+        </div>*@
+        <table style="width:100%;">
+            
+
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-clipboard"></i>
+                        <span class="tooltiptext">ID of Edge Impulse project</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" id="btnEiProjectIdCopy" class="sidenavButton">Project ID</button>
+                </td>
+                <td>
+                    <div>
+                        @ViewData["EiProjectId"]
+                    </div>
+                </td>
+            </tr>
+
+            
+        </table>
+    </fieldset>
+
 </div>
 
 <!--------------------------------------------------
@@ -645,13 +697,17 @@ Script block to update Telemetry/Events grid
         var initialize = function () {
 
             // Initialize Authentication for TSI
+            var eiApiKeyTest = getEiApiKey();
+            console.log(eiApiKeyTest);
+
+            // Initialize Authentication for TSI
             getTsiToken();
 
             tsiClient = new TsiClient();
 
             // Initialize Azure Map
             map = new atlas.Map('map-id', {
-                center: [-122.139192, 47.647472],
+                center: [37.9062, 0.0236],
                 zoom: 19,
                 language: 'en-US',
                 showLogo: false,
@@ -1085,6 +1141,15 @@ Script block to update Telemetry/Events grid
                 });
             };
         });
+
+        // Edge Impulse UI
+
+        $('#btnEiProjectIdCopy').click(function () {
+            console.log("Edge Impulse ProjectId : " + ViewData["EiProjectId"]);
+            navigator.clipboard.writeText(`@ViewData["EiProjectId"]`);
+        })
+
+
         // Refresh TSI Chart
         $('#btnLoginTsi').click(function () {
             var authContextProperties =  { postLogoutRedirectUri: 'https://insights.timeseries.azure.com', clientId: '120d688d-1518-4cf7-bd38-182f158850b6', cacheLocation: 'localStorage' };
@@ -1775,5 +1840,37 @@ Script block to update Telemetry/Events grid
                 }
             });
         });
+
+        //
+        // Functions for Edge Impulse
+        //
+
+        //
+        // Gets a token for TSI access
+        //
+        var getEiApiKey = function () {
+            //console.log("Getting TSI Token");
+            document.getElementById('tsiNonPnP').style.display = 'none';
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetEdgeImpulseProject", "EdgeImpulse")',
+                success: function (response) {
+                    eiProject = response.toString();
+                    console.log("GetEdgeImpulseProject : " + eiProject);
+                    //if (tsiToken.length == 0) {
+                    //    document.getElementById('tsiChart').style.display = "none";
+                    //} else {
+                    //    document.getElementById('tsiChart').style.display = "block";
+                    //}
+                },
+
+                error: function (jqXHR) {
+                    alert("GetEdgeImpulseProject Error: " + jqXHR.status + " " + jqXHR.responseText);
+                    //tsiToken = "";
+                    //document.getElementById('tsiChart').style.display = "none";
+                }
+            });
+        }
+
     </script>
 }

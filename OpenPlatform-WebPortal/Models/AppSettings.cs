@@ -46,6 +46,11 @@ namespace OpenPlatform_WebPortal.Models
         public string WebHookUrl { get; set; }
     }
 
+    public class EdgeImpulseSetting
+    {
+        public string ApiKey { get; set; }
+    }
+
     public class AppSettings
     {
         public SignalrSetting SignalR { get; set; }
@@ -55,6 +60,7 @@ namespace OpenPlatform_WebPortal.Models
         public TimeSeriesInsights TimeSeriesInsights { get; set; }
         public ModelRepositorySetting ModelRepository { get; set; }
         public GitHubSetting GitHub { get; set; }
+        public EdgeImpulseSetting EdgeImpulse { get; set; }
     }
 }
 
