@@ -35,7 +35,27 @@ namespace OpenPlatform_WebPortal.Helper
             }
             catch (Exception e)
             {
-                _logger.LogError($"Error GetModelContentAsync(): {e.Message}");
+                _logger.LogError($"Error GetProjects(): {e.Message}");
+            }
+            return jsonModel;
+        }
+
+        public async Task<string> GetBuiltModels(string path)
+        {
+            var jsonModel = string.Empty;
+            try
+            {
+                var fullPath = new Uri($"{path}");
+                if (!string.IsNullOrEmpty(_apiKey))
+                {
+                    _httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
+                    _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                }
+                jsonModel = await _httpClient.GetStringAsync(fullPath);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error GetBuiltModels(): {e.Message}");
             }
             return jsonModel;
         }

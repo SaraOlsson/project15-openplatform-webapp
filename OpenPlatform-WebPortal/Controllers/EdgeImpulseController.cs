@@ -28,7 +28,6 @@ namespace OpenPlatform_WebPortal.Controllers
             try
             {
                 var result = _appSettings.EdgeImpulse.ApiKey;
-
                 return Ok(result);
             }
             catch (Exception e)
@@ -56,7 +55,34 @@ namespace OpenPlatform_WebPortal.Controllers
             }
             catch (Exception e)
             {
-                _logger.LogError($"Exception in AddIoTHubDevice() : {e.Message}");
+                _logger.LogError($"Exception in ConnectEIProject() : {e.Message}");
+                return StatusCode(400, new { message = e.Message });
+            }
+
+            return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetEIBuilds(string apiKey)
+        {
+            try
+            {
+                if (apiKey != null)
+                {
+                    string projectId = "40654";
+                    string type = "nordic-nrf52840-dk";
+                    string path = $"https://studio.edgeimpulse.com/v1/api/{projectId}/deployment?type={type}";
+
+                    EdgeImpulseApiHelper resolver = new EdgeImpulseApiHelper(apiKey, _logger);
+                    var modelData = await resolver.GetBuiltModels(path);
+
+                    _logger.LogInformation($"Mock: Got model info from project: {apiKey}");
+                    return StatusCode(200, modelData);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in GetEIBuilds() : {e.Message}");
                 return StatusCode(400, new { message = e.Message });
             }
 
