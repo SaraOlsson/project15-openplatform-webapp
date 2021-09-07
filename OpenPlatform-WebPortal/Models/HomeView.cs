@@ -16,6 +16,9 @@ namespace OpenPlatform_WebPortal.Models
         public string registrationId { get; set; }
         public DpsEnrollmentListViewModel dpsEnrollmentList { get; set; }
         public DpsEnrollmentListViewModel dpsGroupEnrollmentList { get; set; }
+
+        // REVIEW: move?
+        public string eiProjectId { get; set; }
     }
 
     public class IoTHubDeviceListViewModel

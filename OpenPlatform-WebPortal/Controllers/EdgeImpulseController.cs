@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using OpenPlatform_WebPortal.Helper;
 using OpenPlatform_WebPortal.Models;
 
 
@@ -34,6 +35,32 @@ namespace OpenPlatform_WebPortal.Controllers
             {
                 return StatusCode(500, e.Message);
             }
+        }
+
+        // ConnectEIProject
+        [HttpPost]
+        public async Task<ActionResult> ConnectEIProject(string apiKey)
+        {
+            try
+            {
+                if (apiKey != null)
+                {
+                    string path = "https://studio.edgeimpulse.com/v1/api/projects";
+
+                    EdgeImpulseApiHelper resolver = new EdgeImpulseApiHelper(apiKey, _logger);
+                    var modelData = await resolver.GetProjects(path);
+
+                    _logger.LogInformation($"Mock: Connected Edge Impulse project with API key: {apiKey}");
+                    return StatusCode(200, modelData);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in AddIoTHubDevice() : {e.Message}");
+                return StatusCode(400, new { message = e.Message });
+            }
+
+            return Ok();
         }
     }
 }

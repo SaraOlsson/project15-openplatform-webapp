@@ -306,50 +306,55 @@
     --------------------------------------------------->
     <fieldset style="height:100%;">
         <legend class="inner"><strong>Edge Impulse</strong></legend>
-        @*<div>
-            <label for="dpsEnrollmentList" id="EnrollmentType" style="font-weight:500;">Edge Impulse</label>
-        </div>
-        <div style="max-width:inherit;">
-            <select id="dpsEnrollmentList">
-                <option value=""></option>
-                @if (ViewBag.DpsEnrollmentList != null)
-                {
-                    foreach (var item in ViewBag.DpsEnrollmentList.Enrollments)
-                    {
-                        if (ViewBag.DpsEnrollmentList.SelectedEnrollment != null && ViewBag.DpsEnrollmentList.SelectedEnrollment == item.RegistrationId)
-                        {
-                            <option value="@item.RegistrationId" data-isGroup="@item.isGroup" selected="selected">@item.RegistrationId</option>
-                        }
-                        else
-                        {
-                            <option value="@item.RegistrationId" data-isGroup="@item.isGroup">@item.RegistrationId</option>
-                        }
-                    }
-                }
-            </select>
-        </div>*@
-        <table style="width:100%;">
-            
 
-            <tr>
-                <td class="sidenavFas">
-                    <div class="sidenavTooltip">
-                        <i class="fas fa-clipboard"></i>
-                        <span class="tooltiptext">ID of Edge Impulse project</span>
-                    </div>
-                </td>
-                <td>
-                    <button type="button" id="btnEiProjectIdCopy" class="sidenavButton">Project ID</button>
-                </td>
-                <td>
-                    <div>
-                        @ViewData["EiProjectId"]
-                    </div>
-                </td>
-            </tr>
+    <table style="width:100%;">
 
-            
-        </table>
+        <tr>
+            <td class="sidenavFas">
+                <div class="sidenavTooltip">
+                    <i class="far fas fa-plus"></i>
+                    <span class="tooltiptext">Connect a project from Edge Impulse.</span>
+                </div>
+            </td>
+            <td>
+                <button type="button" id="btnConnectEIProjectPopup" class="sidenavButton">Connect project</button>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="sidenavFas">
+                <div class="sidenavTooltip">
+                    <i class="fas fa-clipboard"></i>
+                    <span class="tooltiptext">ID of Edge Impulse project</span>
+                </div>
+            </td>
+            <td>
+                <button type="button" id="btnEiProjectIdCopy" class="sidenavButton">Project ID</button>
+            </td>
+            <td>
+                <div id="eiProjectIdDiv">
+                    @ViewData["EiProjectId"]
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td class="sidenavFas">
+                <div class="sidenavTooltip">
+                    <i class="fas fa-clipboard"></i>
+                    <span class="tooltiptext">Name of Edge Impulse project</span>
+                </div>
+            </td>
+            <td>
+                <span>Project name</span>
+            </td>
+            <td>
+                <div id="eiProjectIdName"></div>
+            </td>
+        </tr>
+
+
+    </table>
     </fieldset>
 
 </div>
@@ -582,36 +587,36 @@ Main Page
 
                         @using (Html.BeginForm("GetQrCode", "IoTHubDps", FormMethod.Post, new { @id = "QRCodeForm" }))
                         {
-                        <div style="max-width:inherit;">
+                            <div style="max-width:inherit;">
 
-                            <label for="dpsGroupEnrollmentList" style="font-weight:500;"><strong>Group Enrollment Name</strong></label>
-                            <div style="max-width:inherit;">
-                                Select DPS Group Enrollment to use.<br />If you do not have one, leave this empty.  This will create a new group enrollment called "SAS-IoT-Devices"
-                            </div>
-                            <div style="max-width:inherit;">
-                                <select id="dpsGroupEnrollmentList">
-                                    <option value=""></option>
-                                    @if (ViewBag.DpsGroupEnrollmentList != null)
-                                    {
-                                        foreach (var item in ViewBag.DpsGroupEnrollmentList.Enrollments)
+                                <label for="dpsGroupEnrollmentList" style="font-weight:500;"><strong>Group Enrollment Name</strong></label>
+                                <div style="max-width:inherit;">
+                                    Select DPS Group Enrollment to use.<br />If you do not have one, leave this empty.  This will create a new group enrollment called "SAS-IoT-Devices"
+                                </div>
+                                <div style="max-width:inherit;">
+                                    <select id="dpsGroupEnrollmentList">
+                                        <option value=""></option>
+                                        @if (ViewBag.DpsGroupEnrollmentList != null)
                                         {
-                                            <option value="@item.RegistrationId">@item.RegistrationId</option>
+                                            foreach (var item in ViewBag.DpsGroupEnrollmentList.Enrollments)
+                                            {
+                                                <option value="@item.RegistrationId">@item.RegistrationId</option>
+                                            }
                                         }
-                                    }
-                                </select>
+                                    </select>
+                                </div>
+
+                                @* @Html.DropDownListFor(model => Model.registrationId, new SelectList(Model.groupEnrollmentList, "Value", "Text"), new { @id = "groupEnrollmentList" })*@
+                                <label for="groupId" style="font-weight:500;"><strong>Device ID</strong></label>
+
+                                @Html.TextBoxFor(m => Model.newDeviceId, new
+                                   {
+                                       @class = "form-control input-md",
+                                       @id = "qrCodeDeviceId",
+                                       placeholder = "Enter new Device ID",
+                                       Required = "required",
+                                   })
                             </div>
-
-                            @* @Html.DropDownListFor(model => Model.registrationId, new SelectList(Model.groupEnrollmentList, "Value", "Text"), new { @id = "groupEnrollmentList" })*@
-                            <label for="groupId" style="font-weight:500;"><strong>Device ID</strong></label>
-
-                            @Html.TextBoxFor(m => Model.newDeviceId, new
-                               {
-                                   @class = "form-control input-md",
-                                   @id = "qrCodeDeviceId",
-                                   placeholder = "Enter new Device ID",
-                                   Required = "required",
-                               })
-                        </div>
                             @*<div>
                                     <label for="groupEnrollmentList" style="font-weight:500;"><strong>Group Enrollment Name</strong></label>
                                 </div>
@@ -632,6 +637,36 @@ Main Page
             </div>
         </div>
     </div>
+
+    <!--------------------------------------------------
+    Modal Dialog to connect to Edge Impulse
+    --------------------------------------------------->
+    <div class="modal fade" id="ModalConnectEdgeImpulse" role="dialog" style="">
+        <div class="modal-dialog err-pop">
+            <div class="modal-content" id="NewDeviceModal">
+                <div class="modal-header">
+                    <strong>Connect Edge Impulse project</strong>
+                </div>
+                <div class="modal-body">
+                    <textares>X characters project id.</textares>
+                    <div style="margin-top:1em">
+                        @Html.TextBoxFor(m => Model.eiProjectId, new
+                        {
+                            @class = "form-control input-md",
+                            @id = "eiProjectId",
+                            placeholder = "Enter Edge Impulse ID",
+                            Required = "required"
+                        })
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" id="btnConnectEIProject" style="max-width:30%;min-width:120px;padding:3.5px;"><i class="fas fa-plus"></i>Connect</button>
+                    <button type="button" style="max-width:30%;min-width:120px;padding:3.5px;" data-dismiss="modal"><i class="fas fa-times"></i>Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <!--------------------------------------------------
@@ -696,7 +731,7 @@ Script block to update Telemetry/Events grid
         //
         var initialize = function () {
 
-            // Initialize Authentication for TSI
+            // Initialize Edge Impulse
             var eiApiKeyTest = getEiApiKey();
             console.log(eiApiKeyTest);
 
@@ -951,6 +986,12 @@ Script block to update Telemetry/Events grid
             $('#newDeviceId').focus();
         });
 
+        // Display a dialog to connect Edge Impulse project
+        // ModalConnectEdgeImpulse
+        $('#btnConnectEIProjectPopup').click(function () {
+            $('#ModalConnectEdgeImpulse').modal('show');
+        })
+
         //
         // Adds a new IoT Device to IoT Hub
         //
@@ -1148,6 +1189,42 @@ Script block to update Telemetry/Events grid
             console.log("Edge Impulse ProjectId : " + ViewData["EiProjectId"]);
             navigator.clipboard.writeText(`@ViewData["EiProjectId"]`);
         })
+
+        //
+        // Connects EI project
+        //
+        $('#btnConnectEIProject').click(function () {
+            var projectId = $('#eiProjectId').val();
+
+            if (projectId.length > 0) {
+
+                console.log("Connect Edge Impulse project " + projectId);
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("ConnectEIProject", "EdgeImpulse")',
+                    data: { apiKey: projectId },
+                    success: function (response) {
+
+                        console.log("Connect Edge Impulse project " + projectId + " SUCCESS");
+                        console.log(response);
+
+                        var json = JSON.parse(response);
+
+                        console.log(json);
+                        console.log("Found Edge Impulse project " + json.projects[0].id);
+
+                        document.getElementById('eiProjectIdDiv').innerHTML = json.projects[0].id;
+                        document.getElementById('eiProjectIdName').innerHTML = json.projects[0].name;
+
+                    },
+                    error: function (jqXHR) {
+                        alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
+                    }
+                });
+                disableDeviceList(false);
+                $('#ModalConnectEdgeImpulse').modal('hide');
+            }
+        });
 
 
         // Refresh TSI Chart

@@ -40,7 +40,7 @@ namespace Portal.Controllers
             ViewData["DpsIdScope"] = _appSettings.Dps.IdScope.ToString();
             ViewData["tilesetId"] = _appSettings.AzureMap.TilesetId;
             ViewData["statesetId"] = _appSettings.AzureMap.StatesetId;
-            ViewData["EiProjectId"] = 40654; // TODO SARA (maybe not as app setting)
+            ViewData["EiProjectId"] = 0; //40654; // TODO SARA (maybe not as app setting)
             ViewBag.DpsEnrollmentList = await _helper.RefreshDpsEnrollments();
             ViewBag.DpsGroupEnrollmentList = await _helper.RefreshDpsGroupEnrollments();
             ViewBag.IoTHubDeviceList = await _helper.GetIoTHubDevices();
