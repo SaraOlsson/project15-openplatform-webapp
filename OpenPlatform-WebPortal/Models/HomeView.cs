@@ -17,6 +17,8 @@ namespace OpenPlatform_WebPortal.Models
         public DpsEnrollmentListViewModel dpsEnrollmentList { get; set; }
         public DpsEnrollmentListViewModel dpsGroupEnrollmentList { get; set; }
 
+        public EiFirmwareListViewModel eiFirmwareList { get; set; }
+
         // REVIEW: move?
         public string eiProjectId { get; set; }
     }
@@ -73,5 +75,35 @@ namespace OpenPlatform_WebPortal.Models
     {
         public string RegistrationId { get; set; }
         public bool isGroup { get; set; }
+    }
+
+    // Edge Impulse
+    public class EiFirmwareListViewModel
+    {
+        public EiFirmwareListViewModel()
+        {
+            Options = new List<FirmwareOptionViewModel>();
+            Options.Add(new FirmwareOptionViewModel()
+            {
+                OptionName = "Nordic NRF52840 DK",
+                OptionKey = "nordic-nrf52840-dk"
+            });
+            Options.Add(new FirmwareOptionViewModel()
+            {
+                OptionName = "C++ library",
+                OptionKey = "zip"
+            });
+        }
+
+        [Display(Name = "EI firmware List")]
+        [Required]
+        public string SelectedOption { get; set; }
+        public IList<FirmwareOptionViewModel> Options { get; set; }
+    }
+
+    public class FirmwareOptionViewModel
+    {
+        public string OptionName { get; set; }
+        public string OptionKey { get; set; }
     }
 }

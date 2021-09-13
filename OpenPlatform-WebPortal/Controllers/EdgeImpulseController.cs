@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
@@ -20,6 +22,12 @@ namespace OpenPlatform_WebPortal.Controllers
         {
             _logger = logger;
             _appSettings = optionsAccessor.Value;
+        }
+
+        // NOTE: needed?
+        public IActionResult Index()
+        {
+            return View();
         }
 
         [HttpGet]
@@ -87,6 +95,71 @@ namespace OpenPlatform_WebPortal.Controllers
             }
 
             return Ok();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DownloadModel(string apiKey, string type, string projectId)
+        {
+            try
+            {
+                if (apiKey != null)
+                {
+                    // string projectId = "40654";
+                    // string type = "nordic-nrf52840-dk";
+                    string path = $"https://studio.edgeimpulse.com/v1/api/{projectId}/deployment/download?type={type}";
+
+                   EdgeImpulseApiHelper resolver = new EdgeImpulseApiHelper(apiKey, _logger);
+                    var modelData = await resolver.GetModelBinary(path);
+
+                    _logger.LogInformation($"Mock: Got model file info from project: {apiKey}");
+                    return StatusCode(200, modelData);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in DownloadModel() : {e.Message}");
+                return StatusCode(400, new { message = e.Message });
+            }
+
+            return Ok();
+        }
+
+        // Refresh Device List from IoT Hub (in progress)
+        [HttpGet]
+        public async Task<ActionResult> RefreshFirmwareOptions(int delay, string selectedDevice)
+        {
+
+            var eiFirmwareList = new EiFirmwareListViewModel();
+
+            List<FirmwareOptionViewModel> Options = new List<FirmwareOptionViewModel>();
+            Options.Add(new FirmwareOptionViewModel()
+            {
+                OptionName = "Nordic NRF52840 DK",
+                OptionKey = "nordic-nrf52840-dk"
+            });
+            Options.Add(new FirmwareOptionViewModel()
+            {
+                OptionName = "C++ library",
+                OptionKey = "zip"
+            });
+
+            eiFirmwareList.Options = Options;
+
+            try
+            {
+                Thread.Sleep(delay);
+
+                ViewBag.eiFirmwareListViewModel = eiFirmwareList;
+
+                //ViewBag.IoTHubDeviceList = await _helper.GetIoTHubDevices();
+                //ViewBag.IoTHubDeviceList.SelectedIoTHubDevice = selectedDevice;
+                return PartialView("EiFirmwareListPartialView");
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in RefreshIoTHubDevices() : {e.Message}");
+                return StatusCode(400, new { message = e.Message });
+            }
         }
     }
 }

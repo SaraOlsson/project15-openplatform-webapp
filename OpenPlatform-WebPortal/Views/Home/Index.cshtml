@@ -307,54 +307,105 @@
     <fieldset style="height:100%;">
         <legend class="inner"><strong>Edge Impulse</strong></legend>
 
-    <table style="width:100%;">
+        @*does not show up yet*@
+        <div>
+            <label for="eiFirmwareList" id="eiFirmwareType" style="font-weight:500;">Firmware</label>
+        </div>
+        <div style="max-width:inherit;">
+            <select id="eiFirmwareList">
+                <option value=""></option>
+                @if (ViewBag.EiFirmwareList != null)
+                {
+                    foreach (var item in ViewBag.EiFirmwareList.Options)
+                    {
+                        if (ViewBag.EiFirmwareList.SelectedFirmware != null)
+                        {
+                            <option value="@item.OptionKey" data-isGroup="@item.isGroup" selected="selected">@item.OptionName</option>
+                        }
+                        else
+                        {
+                            <option value="@item.OptionKey" data-isGroup="@item.isGroup">@item.OptionName</option>
+                        }
+                    }
+                }
+            </select>
+        </div>
 
-        <tr>
-            <td class="sidenavFas">
-                <div class="sidenavTooltip">
-                    <i class="far fas fa-plus"></i>
-                    <span class="tooltiptext">Connect a project from Edge Impulse.</span>
-                </div>
-            </td>
-            <td>
-                <button type="button" id="btnConnectEIProjectPopup" class="sidenavButton">Connect project</button>
-            </td>
-        </tr>
+        <table style="width:100%;">
 
-        <tr>
-            <td class="sidenavFas">
-                <div class="sidenavTooltip">
-                    <i class="fas fa-clipboard"></i>
-                    <span class="tooltiptext">ID of Edge Impulse project</span>
-                </div>
-            </td>
-            <td>
-                <button type="button" id="btnEiProjectIdCopy" class="sidenavButton">Project ID</button>
-            </td>
-            <td>
-                <div id="eiProjectIdDiv">
-                    @ViewData["EiProjectId"]
-                </div>
-            </td>
-        </tr>
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="far fas fa-plus"></i>
+                        <span class="tooltiptext">Connect a project from Edge Impulse.</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" id="btnConnectEIProjectPopup" class="sidenavButton">Connect project</button>
+                </td>
+            </tr>
 
-        <tr>
-            <td class="sidenavFas">
-                <div class="sidenavTooltip">
-                    <i class="fas fa-clipboard"></i>
-                    <span class="tooltiptext">Name of Edge Impulse project</span>
-                </div>
-            </td>
-            <td>
-                <span>Project name</span>
-            </td>
-            <td>
-                <div id="eiProjectIdName"></div>
-            </td>
-        </tr>
+            @*should not be visible in UI*@
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-clipboard"></i>
+                        <span class="tooltiptext">API key</span>
+                    </div>
+                </td>
+                <td>
+                    <span>API key</span>
+                </td>
+                <td>
+                    <div id="eiApiKey"></div>
+                </td>
+            </tr>
 
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-clipboard"></i>
+                        <span class="tooltiptext">ID of Edge Impulse project</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" id="btnEiProjectIdCopy" class="sidenavButton">Project ID</button>
+                </td>
+                <td>
+                    <div id="eiProjectIdDiv">
+                        @ViewData["EiProjectId"]
+                    </div>
+                </td>
+            </tr>
 
-    </table>
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-clipboard"></i>
+                        <span class="tooltiptext">Name of Edge Impulse project</span>
+                    </div>
+                </td>
+                <td>
+                    <span>Project name</span>
+                </td>
+                <td>
+                    <div id="eiProjectIdName"></div>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="far fas fa-plus"></i>
+                        <span class="tooltiptext">Download model from Edge Impulse.</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" id="btnDownloadModel" class="sidenavButton">Download model</button>
+                </td>
+            </tr>
+
+        </table>
     </fieldset>
 
 </div>
@@ -654,7 +705,7 @@ Main Page
                         {
                             @class = "form-control input-md",
                             @id = "eiProjectId",
-                            placeholder = "Enter Edge Impulse ID",
+                            placeholder = "Enter Edge Impulse API Key",
                             Required = "required"
                         })
                     </div>
@@ -734,6 +785,8 @@ Script block to update Telemetry/Events grid
             // Initialize Edge Impulse
             var eiApiKeyTest = getEiApiKey();
             console.log(eiApiKeyTest);
+
+            RefreshFirmwareOptions(); // does not work yet
 
             // Initialize Authentication for TSI
             getTsiToken();
@@ -992,6 +1045,11 @@ Script block to update Telemetry/Events grid
             $('#ModalConnectEdgeImpulse').modal('show');
         })
 
+        $('#btnDownloadModel').click(function () {
+            console.log("btnDownloadModel Command: " + deviceModelId);
+            downloadEiModel();
+        })
+
         //
         // Adds a new IoT Device to IoT Hub
         //
@@ -1201,7 +1259,7 @@ Script block to update Telemetry/Events grid
                 console.log("Connect Edge Impulse project " + projectId);
                 $.ajax({
                     type: "POST",
-                    url: '@Url.Action("ConnectEIProject", "EdgeImpulse")',
+                    url: '@Url.Action("ConnectEIProject", "EdgeImpulse")', //  GetEIBuilds // ConnectEIProject
                     data: { apiKey: projectId },
                     success: function (response) {
 
@@ -1945,6 +2003,47 @@ Script block to update Telemetry/Events grid
                     alert("GetEdgeImpulseProject Error: " + jqXHR.status + " " + jqXHR.responseText);
                     //tsiToken = "";
                     //document.getElementById('tsiChart').style.display = "none";
+                }
+            });
+        }
+
+        var RefreshFirmwareOptions = function () {
+            console.log("Refreshing EI firmware options");
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("RefreshFirmwareOptions", "EdgeImpulse")',
+                data: {},
+                success: function (response) {
+                    //debugger
+                    console.log(response);
+                    console.log("EI Options List");
+                    $("#eiFirmwareList").empty();
+                    $("#eiFirmwareList").append(response);
+                },
+                error: function (jqXHR) {
+                    alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
+                }
+            });
+        }
+
+        var downloadEiModel = function () {
+            console.log("Get downloadEiModel");
+
+            var type = "nordic-nrf52840-dk";
+
+            var projectId = "47961"; // "p15-elephant-audio"; // $('#eiProjectIdDiv').text();
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DownloadModel", "EdgeImpulse")',
+                data: { apiKey: projectId, type: type, projectId: projectId},
+                success: function (response) {
+                    //debugger
+                    console.log(response);
+                    console.log("DownloadModel success"); 
+                },
+                error: function (jqXHR) {
+                    alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
                 }
             });
         }

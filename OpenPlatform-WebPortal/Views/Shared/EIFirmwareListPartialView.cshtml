@@ -1,0 +1,13 @@
+﻿@model OpenPlatform_WebPortal.Models.EiFirmwareListViewModel
+
+<option value=""></option>
+@if (ViewBag.EiFirmwareList != null)
+{
+    foreach (var item in ViewBag.EiFirmwareList.Options)
+    {
+        if (ViewBag.EiFirmwareList.Options != null)
+        {
+            <option value="@item.OptionName">@item.OptionName</option>
+}
+}
+}
