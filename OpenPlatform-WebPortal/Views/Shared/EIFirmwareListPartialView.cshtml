@@ -1,6 +1,6 @@
 ﻿@model OpenPlatform_WebPortal.Models.EiFirmwareListViewModel
 
-<option value=""></option>
+<option value="nordic-nrf52840-d">Nordic NRF52840 DK</option>
 @if (ViewBag.EiFirmwareList != null)
 {
     foreach (var item in ViewBag.EiFirmwareList.Options)
@@ -8,6 +8,6 @@
         if (ViewBag.EiFirmwareList.Options != null)
         {
             <option value="@item.OptionName">@item.OptionName</option>
-}
-}
+        }
+    }
 }

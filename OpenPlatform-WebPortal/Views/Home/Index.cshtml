@@ -334,6 +334,10 @@
         <table style="width:100%;">
 
             <tr>
+                <th><img src="/images/logo_edgeimpulse_may_2021.png" alt="Edge Impulse" style="width:5em"></th>
+            </tr>
+
+            <tr>
                 <td class="sidenavFas">
                     <div class="sidenavTooltip">
                         <i class="far fas fa-plus"></i>
@@ -354,10 +358,10 @@
                     </div>
                 </td>
                 <td>
-                    <span>API key</span>
+                    <button type="button" id="btnEiApiKeyCopy" class="sidenavButton">API Key</button>
                 </td>
                 <td>
-                    <div id="eiApiKey"></div>
+                    <div id="eiApiKeyDiv"></div>
                 </td>
             </tr>
 
@@ -397,13 +401,30 @@
                 <td class="sidenavFas">
                     <div class="sidenavTooltip">
                         <i class="far fas fa-plus"></i>
+                        <span class="tooltiptext">Add to selected device.</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" id="btnConnectEIModelToDevice" class="sidenavButton">Add to device</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="far fas fa-plus"></i>
                         <span class="tooltiptext">Download model from Edge Impulse.</span>
                     </div>
                 </td>
                 <td>
                     <button type="button" id="btnDownloadModel" class="sidenavButton">Download model</button>
                 </td>
+
+                <a href="files/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>
+                @*<a href="../bin/Debug/netcoreapp3.1/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>*@
             </tr>
+
+
 
         </table>
     </fieldset>
@@ -701,10 +722,10 @@ Main Page
                 <div class="modal-body">
                     <textares>X characters project id.</textares>
                     <div style="margin-top:1em">
-                        @Html.TextBoxFor(m => Model.eiProjectId, new
+                        @Html.TextBoxFor(m => Model.eiApiKey, new
                         {
                             @class = "form-control input-md",
-                            @id = "eiProjectId",
+                            @id = "eiApiKey",
                             placeholder = "Enter Edge Impulse API Key",
                             Required = "required"
                         })
@@ -786,6 +807,7 @@ Script block to update Telemetry/Events grid
             var eiApiKeyTest = getEiApiKey();
             console.log(eiApiKeyTest);
 
+            $('#btnConnectEIModelToDevice').attr("disabled", true);
             RefreshFirmwareOptions(); // does not work yet
 
             // Initialize Authentication for TSI
@@ -795,8 +817,8 @@ Script block to update Telemetry/Events grid
 
             // Initialize Azure Map
             map = new atlas.Map('map-id', {
-                center: [37.9062, 0.0236],
-                zoom: 19,
+                center: [37.1846477, -0.1821342],
+                zoom: 15,
                 language: 'en-US',
                 showLogo: false,
                 renderWorldCopies: false,
@@ -1050,6 +1072,16 @@ Script block to update Telemetry/Events grid
             downloadEiModel();
         })
 
+        // trigger device twin to change
+        $('#btnConnectEIModelToDevice').click(function () {
+            var targetDeviceId = $('#iotHubDeviceList option:selected').text();
+            var projectName = $('#eiProjectIdName').text();
+            console.log("btnConnectEIModelToDevice for device: " + targetDeviceId);
+
+
+            connectEIModelToDevice(targetDeviceId, projectName);
+        })
+
         //
         // Adds a new IoT Device to IoT Hub
         //
@@ -1243,8 +1275,13 @@ Script block to update Telemetry/Events grid
 
         // Edge Impulse UI
 
+        $('#btnEiApiKeyCopy').click(function () {
+            console.log("Edge Impulse EiApiKey : " + ViewData["EiApiKey"]);
+            navigator.clipboard.writeText(`@ViewData["EiApiKey"]`);
+        })
+
         $('#btnEiProjectIdCopy').click(function () {
-            console.log("Edge Impulse ProjectId : " + ViewData["EiProjectId"]);
+            console.log("Edge Impulse eiProjectIdDiv : " + ViewData["EiProjectId"]);
             navigator.clipboard.writeText(`@ViewData["EiProjectId"]`);
         })
 
@@ -1252,18 +1289,20 @@ Script block to update Telemetry/Events grid
         // Connects EI project
         //
         $('#btnConnectEIProject').click(function () {
-            var projectId = $('#eiProjectId').val();
+            var apiKey = $('#eiApiKey').val();
 
-            if (projectId.length > 0) {
+            console.log("btnConnectEIProject! api: " + apiKey)
 
-                console.log("Connect Edge Impulse project " + projectId);
+            if (apiKey.length > 0) {
+
+                console.log("Connect Edge Impulse project " + apiKey);
                 $.ajax({
                     type: "POST",
                     url: '@Url.Action("ConnectEIProject", "EdgeImpulse")', //  GetEIBuilds // ConnectEIProject
-                    data: { apiKey: projectId },
+                    data: { apiKey: apiKey },
                     success: function (response) {
 
-                        console.log("Connect Edge Impulse project " + projectId + " SUCCESS");
+                        console.log("Connect Edge Impulse project " + apiKey + " SUCCESS");
                         console.log(response);
 
                         var json = JSON.parse(response);
@@ -1271,6 +1310,7 @@ Script block to update Telemetry/Events grid
                         console.log(json);
                         console.log("Found Edge Impulse project " + json.projects[0].id);
 
+                        document.getElementById('eiApiKeyDiv').innerHTML = apiKey;
                         document.getElementById('eiProjectIdDiv').innerHTML = json.projects[0].id;
                         document.getElementById('eiProjectIdName').innerHTML = json.projects[0].name;
 
@@ -1316,6 +1356,8 @@ Script block to update Telemetry/Events grid
                 clearDeviceInfo();
                 UpdateLocationInfo("", "&nbsp;", "&nbsp;");
             }
+
+            $('#btnConnectEIModelToDevice').attr("disabled", false);
         });
 
         var SelectDeviceList = function (deviceId) {
@@ -2007,6 +2049,26 @@ Script block to update Telemetry/Events grid
             });
         }
 
+        var connectEIModelToDevice = function (deviceId, projectName) {
+
+            console.log("Post connectEIModelToDevice");
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ConnectEIModelToDevice", "EdgeImpulse")',
+                data: { deviceId: deviceId, projectName: projectName },
+                success: function (response) {
+                    //debugger
+                    console.log(response);
+                   
+                },
+                error: function (jqXHR) {
+                    alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
+                }
+            });
+
+        }
+
         var RefreshFirmwareOptions = function () {
             console.log("Refreshing EI firmware options");
             $.ajax({
@@ -2029,23 +2091,31 @@ Script block to update Telemetry/Events grid
         var downloadEiModel = function () {
             console.log("Get downloadEiModel");
 
-            var type = "nordic-nrf52840-dk";
+
+
+            @*var type = "nordic-nrf52840-dk";
 
             var projectId = "47961"; // "p15-elephant-audio"; // $('#eiProjectIdDiv').text();
+            var apiKey = $('#eiApiKeyDiv').text();
+            console.log("eiApiKey" + apiKey)
 
             $.ajax({
                 type: "POST",
                 url: '@Url.Action("DownloadModel", "EdgeImpulse")',
-                data: { apiKey: projectId, type: type, projectId: projectId},
+                data: { apiKey: apiKey, type: type, projectId: projectId},
                 success: function (response) {
                     //debugger
-                    console.log(response);
-                    console.log("DownloadModel success"); 
+                    console.log("DownloadModel success");
+                    // console.log(response);
+                    //download(response);
+
                 },
                 error: function (jqXHR) {
                     alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
                 }
-            });
+            });*@
+
+            document.getElementById('download').click();
         }
 
     </script>

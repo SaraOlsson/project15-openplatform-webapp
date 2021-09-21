@@ -31,6 +31,7 @@ namespace OpenPlatform_WebPortal.Helper
 		Task<IoTHubDeviceListViewModel> AddIoTHubDevice(string deviceId);
 		Task<bool> DeleteIoTHubDevice(string deviceId);
 		Task<Twin> GetDeviceTwin(string deviceId);
+		Task<Twin> UpdateDeviceTwin(string deviceId, string tagJson);
 		Task<Twin> GetModuleTwin(string deviceId, string moduleId);
 		Task<IEnumerable<Module>> GetModules(string deviceId);
 		Task<EnrollmentGroup> GetDpsGroupEnrollment(string enrollmentGroupId);
@@ -219,6 +220,37 @@ namespace OpenPlatform_WebPortal.Helper
 			{
 				_logger.LogDebug($"Retrieving Twin for {deviceId}");
 				twin = await _registryManager.GetTwinAsync(deviceId);
+			}
+			catch (Exception e)
+			{
+				_logger.LogError($"Exception in GetDeviceTwin() : {e.Message}");
+				throw e;
+			}
+			return twin;
+		}
+
+		/**********************************************************************************
+         * Updates Twin from IoT Hub
+         *********************************************************************************/
+		public async Task<Twin> UpdateDeviceTwin(string deviceId, string tagJson)
+		{
+			Twin twin = null;
+
+			try
+			{
+				_logger.LogDebug($"Updating Twin for {deviceId}");
+
+				twin = await _registryManager.GetTwinAsync(deviceId);
+
+				Console.WriteLine(twin.Tags.ToJson());
+
+				// string tagJson = tags.ToJson();
+				//await _registryManager.UpdateTwinAsync(deviceId, "{\"tags\": {\"eiModel\":\"ElephantEdge\"}}", twin.ETag);
+				await _registryManager.UpdateTwinAsync(deviceId, "{\"tags\": "+tagJson+"}", twin.ETag);
+
+				Twin twin2 = await _registryManager.GetTwinAsync(deviceId);
+
+				Console.WriteLine(twin2.Tags.ToJson());
 			}
 			catch (Exception e)
 			{

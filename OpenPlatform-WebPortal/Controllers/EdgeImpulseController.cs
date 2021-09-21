@@ -17,9 +17,11 @@ namespace OpenPlatform_WebPortal.Controllers
 
         private readonly ILogger<EdgeImpulseController> _logger;
         private readonly AppSettings _appSettings;
+        private IIoTHubDpsHelper _hubHelper;
 
-        public EdgeImpulseController(IOptions<AppSettings> optionsAccessor, ILogger<EdgeImpulseController> logger)
+        public EdgeImpulseController(IIoTHubDpsHelper helper, IOptions<AppSettings> optionsAccessor, ILogger<EdgeImpulseController> logger)
         {
+            _hubHelper = helper;
             _logger = logger;
             _appSettings = optionsAccessor.Value;
         }
@@ -91,6 +93,28 @@ namespace OpenPlatform_WebPortal.Controllers
             catch (Exception e)
             {
                 _logger.LogError($"Exception in GetEIBuilds() : {e.Message}");
+                return StatusCode(400, new { message = e.Message });
+            }
+
+            return Ok();
+        }
+
+        // ConnectEIModelToDevice
+        [HttpPost]
+        public async Task<IActionResult> ConnectEIModelToDevice(string deviceId, string projectName)
+        {
+            try
+            {
+                //string tagsJson = "{\"eiModel\":\"ElephantEdge\"}";
+
+                string tagsJson = "{\"eiModel\":\""+ projectName + "\"}";
+                await _hubHelper.UpdateDeviceTwin(deviceId, tagsJson);
+                return StatusCode(200);
+                
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in ConnectEIModelToDevice() : {e.Message}");
                 return StatusCode(400, new { message = e.Message });
             }
 
