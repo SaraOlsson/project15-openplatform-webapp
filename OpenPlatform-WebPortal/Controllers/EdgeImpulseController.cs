@@ -173,7 +173,7 @@ namespace OpenPlatform_WebPortal.Controllers
             {
                 Thread.Sleep(delay);
 
-                ViewBag.eiFirmwareListViewModel = eiFirmwareList;
+                ViewBag.EiFirmwareListViewModel = eiFirmwareList;
 
                 //ViewBag.IoTHubDeviceList = await _helper.GetIoTHubDevices();
                 //ViewBag.IoTHubDeviceList.SelectedIoTHubDevice = selectedDevice;

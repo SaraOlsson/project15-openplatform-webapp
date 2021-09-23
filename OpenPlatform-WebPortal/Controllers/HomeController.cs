@@ -26,10 +26,14 @@ namespace Portal.Controllers
             _homeView = new HomeView();
             _helper.SetHomeView(_homeView);
             //            ViewData["IoTHubName"] = _helper.GetIoTHubName(_appSettings.IoTHub.ConnectionString);
+            
+
         }
 
         public async Task<IActionResult> Index()
         {
+            EdgeImpulseApiHelper _eihelper = new EdgeImpulseApiHelper();
+
             HomeView homeView = _homeView;
             ViewData["IoTHubName"] = _helper.GetIoTHubName(_appSettings.IoTHub.ConnectionString);
             ViewData["mapKey"] = _appSettings.AzureMap.MapKey.ToString();
@@ -44,6 +48,7 @@ namespace Portal.Controllers
             ViewBag.DpsEnrollmentList = await _helper.RefreshDpsEnrollments();
             ViewBag.DpsGroupEnrollmentList = await _helper.RefreshDpsGroupEnrollments();
             ViewBag.IoTHubDeviceList = await _helper.GetIoTHubDevices();
+            ViewBag.EiFirmwareList = await _eihelper.GetEiFirmwareList();
             return View(homeView);
         }
 

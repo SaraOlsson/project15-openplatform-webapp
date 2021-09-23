@@ -318,13 +318,13 @@
                 {
                     foreach (var item in ViewBag.EiFirmwareList.Options)
                     {
-                        if (ViewBag.EiFirmwareList.SelectedFirmware != null)
+                        if (ViewBag.EiFirmwareList.SelectedOption != null)
                         {
-                            <option value="@item.OptionKey" data-isGroup="@item.isGroup" selected="selected">@item.OptionName</option>
+                            <option value="@item.OptionKey" selected="selected">@item.OptionName</option>
                         }
                         else
                         {
-                            <option value="@item.OptionKey" data-isGroup="@item.isGroup">@item.OptionName</option>
+                            <option value="@item.OptionKey">@item.OptionName</option>
                         }
                     }
                 }
@@ -361,7 +361,7 @@
                     <button type="button" id="btnEiApiKeyCopy" class="sidenavButton">API Key</button>
                 </td>
                 <td>
-                    <div id="eiApiKeyDiv"></div>
+                    <div id="eiApiKeyDiv" style="display:none;"></div>
                 </td>
             </tr>
 
@@ -423,10 +423,12 @@
                 <a href="files/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>
                 @*<a href="../bin/Debug/netcoreapp3.1/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>*@
             </tr>
-
-
-
         </table>
+
+        <div id="eistudiolinkdiv">
+            @*<a href="https://studio.edgeimpulse.com/studio/32008/acquisition/training" id="eistudiolink">Edge Impulse Studio</a>*@
+        </div>
+
     </fieldset>
 
 </div>
@@ -720,7 +722,7 @@ Main Page
                     <strong>Connect Edge Impulse project</strong>
                 </div>
                 <div class="modal-body">
-                    <textares>X characters project id.</textares>
+                    <textares>Edge Impulse project API key:</textares>
                     <div style="margin-top:1em">
                         @Html.TextBoxFor(m => Model.eiApiKey, new
                         {
@@ -1313,6 +1315,15 @@ Script block to update Telemetry/Events grid
                         document.getElementById('eiApiKeyDiv').innerHTML = apiKey;
                         document.getElementById('eiProjectIdDiv').innerHTML = json.projects[0].id;
                         document.getElementById('eiProjectIdName').innerHTML = json.projects[0].name;
+
+                        // create link element
+                        // Create anchor element.
+                        var a = document.createElement('a');
+                        var link = document.createTextNode("Edge Impulse Studio");
+                        a.appendChild(link);
+                        a.title = "Edge Impulse Studio";
+                        a.href = "https://studio.edgeimpulse.com/studio/"+ json.projects[0].id +"/acquisition/training";
+                        document.getElementById('eistudiolinkdiv').appendChild(a);
 
                     },
                     error: function (jqXHR) {

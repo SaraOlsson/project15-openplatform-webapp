@@ -1,13 +1,16 @@
 ﻿@model OpenPlatform_WebPortal.Models.EiFirmwareListViewModel
 
-<option value="nordic-nrf52840-d">Nordic NRF52840 DK</option>
+<option value="nordic-nrf52840-dk">Nordic NRF52840 DK</option>
+<option value="nordic-nrf5340-dk">Nordic NRF5340 DK</option>
+<option value="zip">C++ library</option>
+<option value="openmv">OpenMV library</option>
+<option value="runner-linux-aarch64">Embedded linux</option>
 @if (ViewBag.EiFirmwareList != null)
 {
     foreach (var item in ViewBag.EiFirmwareList.Options)
     {
-        if (ViewBag.EiFirmwareList.Options != null)
-        {
-            <option value="@item.OptionName">@item.OptionName</option>
-        }
+
+        <option value="@item.OptionName">@item.OptionName</option>
+
     }
 }

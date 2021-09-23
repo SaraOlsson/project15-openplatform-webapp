@@ -21,6 +21,7 @@ namespace OpenPlatform_WebPortal.Models
 
         // REVIEW: move?
         public string eiProjectId { get; set; }
+        public string eiApiKey { get; set; }
     }
 
     public class IoTHubDeviceListViewModel
