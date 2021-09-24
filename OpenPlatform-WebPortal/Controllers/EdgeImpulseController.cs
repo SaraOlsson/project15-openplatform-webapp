@@ -33,7 +33,7 @@ namespace OpenPlatform_WebPortal.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetEdgeImpulseProject()
+        public IActionResult GetEdgeImpulseProject()
         {
             try
             {
@@ -109,8 +109,6 @@ namespace OpenPlatform_WebPortal.Controllers
 
                 string tagsJson = "{\"eiModel\":\""+ projectName + "\"}";
                 await _hubHelper.UpdateDeviceTwin(deviceId, tagsJson);
-                return StatusCode(200);
-                
             }
             catch (Exception e)
             {
@@ -118,7 +116,7 @@ namespace OpenPlatform_WebPortal.Controllers
                 return StatusCode(400, new { message = e.Message });
             }
 
-            return Ok();
+            return StatusCode(200);
         }
 
         [HttpPost]
@@ -133,7 +131,7 @@ namespace OpenPlatform_WebPortal.Controllers
                     string path = $"https://studio.edgeimpulse.com/v1/api/{projectId}/deployment/download?type={type}";
 
                    EdgeImpulseApiHelper resolver = new EdgeImpulseApiHelper(apiKey, _logger);
-                    var modelData = await resolver.GetModelBinary(path);
+                    var modelData = resolver.GetModelBinary(path);
 
                     _logger.LogInformation($"Mock: Got model file info from project: {apiKey}");
                     return StatusCode(200, modelData);
@@ -150,12 +148,12 @@ namespace OpenPlatform_WebPortal.Controllers
 
         // Refresh Device List from IoT Hub (in progress)
         [HttpGet]
-        public async Task<ActionResult> RefreshFirmwareOptions(int delay, string selectedDevice)
+        public ActionResult RefreshFirmwareOptions()
         {
-
             var eiFirmwareList = new EiFirmwareListViewModel();
 
             List<FirmwareOptionViewModel> Options = new List<FirmwareOptionViewModel>();
+
             Options.Add(new FirmwareOptionViewModel()
             {
                 OptionName = "Nordic NRF52840 DK",
@@ -171,17 +169,13 @@ namespace OpenPlatform_WebPortal.Controllers
 
             try
             {
-                Thread.Sleep(delay);
+                ViewBag.EiFirmwareList = eiFirmwareList;
 
-                ViewBag.EiFirmwareListViewModel = eiFirmwareList;
-
-                //ViewBag.IoTHubDeviceList = await _helper.GetIoTHubDevices();
-                //ViewBag.IoTHubDeviceList.SelectedIoTHubDevice = selectedDevice;
                 return PartialView("EiFirmwareListPartialView");
             }
             catch (Exception e)
             {
-                _logger.LogError($"Exception in RefreshIoTHubDevices() : {e.Message}");
+                _logger.LogError($"Exception in RefreshFirmwareOptions() : {e.Message}");
                 return StatusCode(400, new { message = e.Message });
             }
         }

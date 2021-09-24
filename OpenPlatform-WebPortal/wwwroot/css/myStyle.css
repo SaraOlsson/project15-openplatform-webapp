@@ -189,7 +189,7 @@ div.itemBody {
     margin-bottom: 5px;
 }
 
-select#iotHubDeviceList, select#dpsEnrollmentList, select#dpsGroupEnrollmentList, input#newDeviceId, input#newModelId {
+select#iotHubDeviceList, select#dpsEnrollmentList, select#dpsGroupEnrollmentList, input#newDeviceId, input#newModelId, select#eiFirmwareList {
     width: 98%;
     height: 2.0em;
     padding: 0px 5px 0px 5px;
