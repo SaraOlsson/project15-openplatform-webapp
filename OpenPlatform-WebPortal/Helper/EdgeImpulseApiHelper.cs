@@ -69,7 +69,7 @@ namespace OpenPlatform_WebPortal.Helper
             return jsonModel;
         }
 
-        public async Task<IActionResult> GetModelBinary(string path)
+        public IActionResult GetModelBinary(string path)
         {
             string ZIP_PATH = "bin\\Debug\\netcoreapp3.1\\p15-elephant-audio-nrf52840-dk-v1.zip"; //  $"{filename}.zip";
             string filename = "download-model";
@@ -136,7 +136,7 @@ namespace OpenPlatform_WebPortal.Helper
         /**********************************************************************************
          * Get list of devices from IoT Hub
          *********************************************************************************/
-        public async Task<EiFirmwareListViewModel> GetEiFirmwareList()
+        public EiFirmwareListViewModel GetEiFirmwareList()
         {
             var iothubDeviceListViewModel = new EiFirmwareListViewModel();
 

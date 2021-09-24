@@ -4,7 +4,130 @@
 }
 
 <div class="sidenav">
+    <!--------------------------------------------------
+    Edge Impulse
+    --------------------------------------------------->
+    <fieldset style="height:100%;">
+        <div>
+            <img src="/images/logo_edgeimpulse_may_2021.png" alt="Edge Impulse" style="width:5em">
+        </div>
+        <legend class="inner"><strong>Project</strong></legend>
+        <table id="eiProject" style="width:100%;">
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-link"></i>
+                        <span class="tooltiptext">Connect a project from Edge Impulse.</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" id="btnConnectEIProjectPopup" class="sidenavButton">Connect</button>
+                </td>
+            </tr>
 
+            @*should not be visible in UI*@
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-clipboard"></i>
+                        <span class="tooltiptext">API key</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" id="btnEiApiKeyCopy" class="sidenavButton">API Key</button>
+                </td>
+                <td>
+                    <div id="eiApiKeyDiv" style="display:none;"></div>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-clipboard"></i>
+                        <span class="tooltiptext">ID of Edge Impulse project</span>
+                    </div>
+                </td>
+                <td>
+                    <button type="button" id="btnEiProjectIdCopy" class="sidenavButton">ID</button>
+                </td>
+                <td>
+                    <div id="eiProjectIdDiv">
+                        @ViewData["EiProjectId"]
+                    </div>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-clipboard"></i>
+                        <span class="tooltiptext">Name of Edge Impulse project</span>
+                    </div>
+                </td>
+                <td>
+                    <span>Name</span>
+                </td>
+                <td>
+                    <div id="eiProjectIdName"></div>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="far fas fa-plus"></i>
+                        <span class="tooltiptext">Add to selected device.</span>
+                    </div>
+                </td>
+                <td colspan="2">
+                    <button type="button" id="btnConnectEIModelToDevice" class="sidenavButton">Add to device</button>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="sidenavFas">
+                    <div class="sidenavTooltip">
+                        <i class="fas fa-cloud-download-alt"></i>
+                        <span class="tooltiptext">Download model from Edge Impulse.</span>
+                    </div>
+                </td>
+                <td colspan="2">
+                    <button type="button" id="btnDownloadModel" class="sidenavButton">Download model</button>
+                </td>
+
+                @*<a href="files/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>*@
+                @*<a href="../bin/Debug/netcoreapp3.1/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>*@
+            </tr>
+        </table>
+
+        <div id="eistudiolinkdiv">
+            @*<a href="https://studio.edgeimpulse.com/studio/32008/acquisition/training" id="eistudiolink">Edge Impulse Studio</a>*@
+        </div>
+        <div>
+            <legend class="inner"><strong>Firmware</strong></legend>
+        </div>
+        <div style="max-width:inherit;">
+            <select id="eiFirmwareList">
+                <option value=""></option>
+                @if (ViewBag.EiFirmwareList != null)
+                {
+                    foreach (var item in ViewBag.EiFirmwareList.Options)
+                    {
+                        if (ViewBag.EiFirmwareList.SelectedOption != null)
+                        {
+                            <option value="@item.OptionKey" selected="selected">@item.OptionName</option>
+                        }
+                        else
+                        {
+                            <option value="@item.OptionKey">@item.OptionName</option>
+                        }
+                    }
+                }
+            </select>
+        </div>
+
+    </fieldset>
     <!--------------------------------------------------
     Device Selection
     --------------------------------------------------->
@@ -299,136 +422,6 @@
                 </td>
             </tr>
         </table>
-    </fieldset>
-
-    <!--------------------------------------------------
-    Edge Impulse
-    --------------------------------------------------->
-    <fieldset style="height:100%;">
-        <legend class="inner"><strong>Edge Impulse</strong></legend>
-
-        @*does not show up yet*@
-        <div>
-            <label for="eiFirmwareList" id="eiFirmwareType" style="font-weight:500;">Firmware</label>
-        </div>
-        <div style="max-width:inherit;">
-            <select id="eiFirmwareList">
-                <option value=""></option>
-                @if (ViewBag.EiFirmwareList != null)
-                {
-                    foreach (var item in ViewBag.EiFirmwareList.Options)
-                    {
-                        if (ViewBag.EiFirmwareList.SelectedOption != null)
-                        {
-                            <option value="@item.OptionKey" selected="selected">@item.OptionName</option>
-                        }
-                        else
-                        {
-                            <option value="@item.OptionKey">@item.OptionName</option>
-                        }
-                    }
-                }
-            </select>
-        </div>
-
-        <table style="width:100%;">
-
-            <tr>
-                <th><img src="/images/logo_edgeimpulse_may_2021.png" alt="Edge Impulse" style="width:5em"></th>
-            </tr>
-
-            <tr>
-                <td class="sidenavFas">
-                    <div class="sidenavTooltip">
-                        <i class="far fas fa-plus"></i>
-                        <span class="tooltiptext">Connect a project from Edge Impulse.</span>
-                    </div>
-                </td>
-                <td>
-                    <button type="button" id="btnConnectEIProjectPopup" class="sidenavButton">Connect project</button>
-                </td>
-            </tr>
-
-            @*should not be visible in UI*@
-            <tr>
-                <td class="sidenavFas">
-                    <div class="sidenavTooltip">
-                        <i class="fas fa-clipboard"></i>
-                        <span class="tooltiptext">API key</span>
-                    </div>
-                </td>
-                <td>
-                    <button type="button" id="btnEiApiKeyCopy" class="sidenavButton">API Key</button>
-                </td>
-                <td>
-                    <div id="eiApiKeyDiv" style="display:none;"></div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="sidenavFas">
-                    <div class="sidenavTooltip">
-                        <i class="fas fa-clipboard"></i>
-                        <span class="tooltiptext">ID of Edge Impulse project</span>
-                    </div>
-                </td>
-                <td>
-                    <button type="button" id="btnEiProjectIdCopy" class="sidenavButton">Project ID</button>
-                </td>
-                <td>
-                    <div id="eiProjectIdDiv">
-                        @ViewData["EiProjectId"]
-                    </div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="sidenavFas">
-                    <div class="sidenavTooltip">
-                        <i class="fas fa-clipboard"></i>
-                        <span class="tooltiptext">Name of Edge Impulse project</span>
-                    </div>
-                </td>
-                <td>
-                    <span>Project name</span>
-                </td>
-                <td>
-                    <div id="eiProjectIdName"></div>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="sidenavFas">
-                    <div class="sidenavTooltip">
-                        <i class="far fas fa-plus"></i>
-                        <span class="tooltiptext">Add to selected device.</span>
-                    </div>
-                </td>
-                <td>
-                    <button type="button" id="btnConnectEIModelToDevice" class="sidenavButton">Add to device</button>
-                </td>
-            </tr>
-
-            <tr>
-                <td class="sidenavFas">
-                    <div class="sidenavTooltip">
-                        <i class="far fas fa-plus"></i>
-                        <span class="tooltiptext">Download model from Edge Impulse.</span>
-                    </div>
-                </td>
-                <td>
-                    <button type="button" id="btnDownloadModel" class="sidenavButton">Download model</button>
-                </td>
-
-                <a href="files/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>
-                @*<a href="../bin/Debug/netcoreapp3.1/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>*@
-            </tr>
-        </table>
-
-        <div id="eistudiolinkdiv">
-            @*<a href="https://studio.edgeimpulse.com/studio/32008/acquisition/training" id="eistudiolink">Edge Impulse Studio</a>*@
-        </div>
-
     </fieldset>
 
 </div>

@@ -48,7 +48,7 @@ namespace Portal.Controllers
             ViewBag.DpsEnrollmentList = await _helper.RefreshDpsEnrollments();
             ViewBag.DpsGroupEnrollmentList = await _helper.RefreshDpsGroupEnrollments();
             ViewBag.IoTHubDeviceList = await _helper.GetIoTHubDevices();
-            ViewBag.EiFirmwareList = await _eihelper.GetEiFirmwareList();
+            ViewBag.EiFirmwareList = _eihelper.GetEiFirmwareList();
             return View(homeView);
         }
 
