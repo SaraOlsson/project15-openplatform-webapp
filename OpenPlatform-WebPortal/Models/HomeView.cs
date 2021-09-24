@@ -84,16 +84,6 @@ namespace OpenPlatform_WebPortal.Models
         public EiFirmwareListViewModel()
         {
             Options = new List<FirmwareOptionViewModel>();
-            Options.Add(new FirmwareOptionViewModel()
-            {
-                OptionName = "Nordic NRF52840 DK",
-                OptionKey = "nordic-nrf52840-dk"
-            });
-            Options.Add(new FirmwareOptionViewModel()
-            {
-                OptionName = "C++ library",
-                OptionKey = "zip"
-            });
         }
 
         [Display(Name = "EI firmware List")]

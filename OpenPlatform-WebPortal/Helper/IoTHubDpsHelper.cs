@@ -626,7 +626,6 @@ namespace OpenPlatform_WebPortal.Helper
 		{
 			string primaryKey = "";
 			string secondaryKey = "";
-            DpsEnrollmentListViewModel enrollmentList = null;
             bool bCreated = false;
 
 			try
