@@ -32,19 +32,20 @@ namespace OpenPlatform_WebPortal.Controllers
             return View();
         }
 
-        [HttpGet]
-        public IActionResult GetEdgeImpulseProject()
-        {
-            try
-            {
-                var result = _appSettings.EdgeImpulse.ApiKey;
-                return Ok(result);
-            }
-            catch (Exception e)
-            {
-                return StatusCode(500, e.Message);
-            }
-        }
+        // NOTE: sample function
+        //[HttpGet]
+        //public IActionResult GetEdgeImpulseProject()
+        //{
+        //    try
+        //    {
+        //        var result = _appSettings.EdgeImpulse.ApiKey;
+        //        return Ok(result);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        return StatusCode(500, e.Message);
+        //    }
+        //}
 
         // ConnectEIProject
         [HttpPost]
@@ -73,14 +74,12 @@ namespace OpenPlatform_WebPortal.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetEIBuilds(string apiKey)
+        public async Task<IActionResult> GetEIBuilds(string apiKey, string projectId, string type)
         {
             try
             {
                 if (apiKey != null)
                 {
-                    string projectId = "40654";
-                    string type = "nordic-nrf52840-dk";
                     string path = $"https://studio.edgeimpulse.com/v1/api/{projectId}/deployment?type={type}";
 
                     EdgeImpulseApiHelper resolver = new EdgeImpulseApiHelper(apiKey, _logger);
@@ -148,20 +147,42 @@ namespace OpenPlatform_WebPortal.Controllers
 
         // Refresh Device List from IoT Hub (in progress)
         [HttpGet]
-        public ActionResult RefreshFirmwareOptions()
+        public async Task<IActionResult> RefreshFirmwareOptions(string apiKey, string projectId, string type)
         {
+
+            try
+            {
+                if (apiKey != null)
+                {
+                    string path = $"https://studio.edgeimpulse.com/v1/api/{projectId}/deployment?type={type}";
+
+                    EdgeImpulseApiHelper resolver = new EdgeImpulseApiHelper(apiKey, _logger);
+                    var modelData = await resolver.GetBuiltModels(path);
+
+                    _logger.LogInformation($"Mock: Got model info from project: {apiKey}");
+                    return StatusCode(200, modelData);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Exception in GetEIBuilds() : {e.Message}");
+                return StatusCode(400, new { message = e.Message });
+            }
+
+            // 
+
             var eiFirmwareList = new EiFirmwareListViewModel();
 
             List<FirmwareOptionViewModel> Options = new List<FirmwareOptionViewModel>();
 
             Options.Add(new FirmwareOptionViewModel()
             {
-                OptionName = "Nordic NRF52840 DK",
+                OptionName = "Hej Nordic NRF52840 DK",
                 OptionKey = "nordic-nrf52840-dk"
             });
             Options.Add(new FirmwareOptionViewModel()
             {
-                OptionName = "C++ library",
+                OptionName = "Hej C++ library",
                 OptionKey = "zip"
             });
 

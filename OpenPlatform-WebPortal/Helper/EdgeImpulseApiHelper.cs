@@ -142,17 +142,23 @@ namespace OpenPlatform_WebPortal.Helper
 
             iothubDeviceListViewModel.Options.Add(new FirmwareOptionViewModel
             {
-                OptionName = "woop",
-                OptionKey = "woop"
+                OptionName = "Nordic NRF52840 DK",
+                OptionKey = "nordic-nrf52840-dk"
             });
 
-            //var firmwareOptionViewModel = new FirmwareOptionViewModel
-            //{
-            //    OptionName = "woop",
-            //    OptionKey = "woop"
-            //};
+            iothubDeviceListViewModel.Options.Add(new FirmwareOptionViewModel
+            {
+                OptionName = "Nordic NRF5340 DK",
+                OptionKey = "nordic-nrf5340-dk"
+            });
 
-            iothubDeviceListViewModel.SelectedOption = "woop";
+            iothubDeviceListViewModel.Options.Add(new FirmwareOptionViewModel
+            {
+                OptionName = "C++ library",
+                OptionKey = "zip"
+            });
+
+            iothubDeviceListViewModel.SelectedOption = "Nordic NRF52840 DK";
 
             return iothubDeviceListViewModel;
         }

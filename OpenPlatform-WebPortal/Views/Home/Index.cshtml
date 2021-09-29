@@ -798,11 +798,8 @@ Script block to update Telemetry/Events grid
         //
         var initialize = function () {
 
-            // Initialize Edge Impulse
-            var eiApiKeyTest = getEiApiKey();
-            console.log(eiApiKeyTest);
-
             $('#btnConnectEIModelToDevice').attr("disabled", true);
+            $('#btnDownloadModel').attr("disabled", true);
             // RefreshFirmwareOptions(); // does not work yet
 
             // Initialize Authentication for TSI
@@ -1294,7 +1291,7 @@ Script block to update Telemetry/Events grid
                 $.ajax({
                     type: "POST",
                     url: '@Url.Action("ConnectEIProject", "EdgeImpulse")', //  GetEIBuilds // ConnectEIProject
-                    data: { apiKey: apiKey },
+                    data: { apiKey: apiKey},
                     success: function (response) {
 
                         console.log("Connect Edge Impulse project " + apiKey + " SUCCESS");
@@ -2026,32 +2023,6 @@ Script block to update Telemetry/Events grid
         // Functions for Edge Impulse
         //
 
-        //
-        // Gets a token for TSI access
-        //
-        var getEiApiKey = function () {
-            //console.log("Getting TSI Token");
-            document.getElementById('tsiNonPnP').style.display = 'none';
-            $.ajax({
-                type: "GET",
-                url: '@Url.Action("GetEdgeImpulseProject", "EdgeImpulse")',
-                success: function (response) {
-                    eiProject = response.toString();
-                    console.log("GetEdgeImpulseProject : " + eiProject);
-                    //if (tsiToken.length == 0) {
-                    //    document.getElementById('tsiChart').style.display = "none";
-                    //} else {
-                    //    document.getElementById('tsiChart').style.display = "block";
-                    //}
-                },
-
-                error: function (jqXHR) {
-                    alert("GetEdgeImpulseProject Error: " + jqXHR.status + " " + jqXHR.responseText);
-                    //tsiToken = "";
-                    //document.getElementById('tsiChart').style.display = "none";
-                }
-            });
-        }
 
         var connectEIModelToDevice = function (deviceId, projectName) {
 
@@ -2074,17 +2045,26 @@ Script block to update Telemetry/Events grid
         }
 
         var RefreshFirmwareOptions = function () {
+
+            var apiKey = $('#eiApiKeyDiv').text();
+            var projectId = $('#eiProjectIdDiv').text();
+            var type = "nordic-nrf52840-dk";
+
+            var selectedFirmwareType = $('#eiFirmwareList option:selected').text();
+            console.log("selectedFirmwareType: " + selectedFirmwareType)
+
+
             console.log("Refreshing EI firmware options");
             $.ajax({
                 type: "GET",
                 url: '@Url.Action("RefreshFirmwareOptions", "EdgeImpulse")',
-                data: {},
+                data: { apiKey: apiKey, projectId: projectId, type: type},
                 success: function (response) {
                     //debugger
                     console.log(response);
                     console.log("EI Options List");
-                    $("#eiFirmwareList").empty();
-                    $("#eiFirmwareList").append(response);
+                    //$("#eiFirmwareList").empty();
+                    //$("#eiFirmwareList").append(response);
                 },
                 error: function (jqXHR) {
                     alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
