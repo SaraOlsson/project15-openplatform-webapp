@@ -32,21 +32,6 @@ namespace OpenPlatform_WebPortal.Controllers
             return View();
         }
 
-        // NOTE: sample function
-        //[HttpGet]
-        //public IActionResult GetEdgeImpulseProject()
-        //{
-        //    try
-        //    {
-        //        var result = _appSettings.EdgeImpulse.ApiKey;
-        //        return Ok(result);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        return StatusCode(500, e.Message);
-        //    }
-        //}
-
         // ConnectEIProject
         [HttpPost]
         public async Task<ActionResult> ConnectEIProject(string apiKey)
@@ -59,6 +44,11 @@ namespace OpenPlatform_WebPortal.Controllers
 
                     EdgeImpulseApiHelper resolver = new EdgeImpulseApiHelper(apiKey, _logger);
                     var modelData = await resolver.GetProjects(path);
+
+                    if(modelData == null)
+                    {
+                        return StatusCode(400, new { message = "Could not get Edge Impulse project" });
+                    }
 
                     _logger.LogInformation($"Mock: Connected Edge Impulse project with API key: {apiKey}");
                     return StatusCode(200, modelData);

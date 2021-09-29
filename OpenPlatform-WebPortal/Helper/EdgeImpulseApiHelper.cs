@@ -15,7 +15,6 @@ namespace OpenPlatform_WebPortal.Helper
     public class EdgeImpulseApiHelper
     {
         private static string _apiKey = string.Empty;
-        private static HttpClient _httpClient = new HttpClient();
         private static ILogger _logger = null;
 
         public EdgeImpulseApiHelper()
@@ -31,6 +30,7 @@ namespace OpenPlatform_WebPortal.Helper
 
         public async Task<string> GetProjects(string path)
         {
+            HttpClient httpClient = new HttpClient();
             var jsonModel = string.Empty;
             try
             {
@@ -38,29 +38,32 @@ namespace OpenPlatform_WebPortal.Helper
                 if (!string.IsNullOrEmpty(_apiKey))
                 {
                     //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("x-api-key", _apiKey);
-                    _httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
+                    httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
+                    httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                 }
-                jsonModel = await _httpClient.GetStringAsync(fullPath);
+                jsonModel = await httpClient.GetStringAsync(fullPath);
             }
             catch (Exception e)
             {
                 _logger.LogError($"Error GetProjects(): {e.Message}");
+                return null;
             }
             return jsonModel;
         }
 
         public async Task<string> GetBuiltModels(string path)
         {
+            HttpClient httpClient = new HttpClient();
             var jsonModel = string.Empty;
             try
             {
                 var fullPath = new Uri($"{path}");
                 if (!string.IsNullOrEmpty(_apiKey))
                 {
-                    _httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
-                    _httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
+                    httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
+                    httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                 }
-                jsonModel = await _httpClient.GetStringAsync(fullPath);
+                jsonModel = await httpClient.GetStringAsync(fullPath);
             }
             catch (Exception e)
             {
@@ -69,19 +72,21 @@ namespace OpenPlatform_WebPortal.Helper
             return jsonModel;
         }
 
-        public IActionResult GetModelBinary(string path)
+        public async Task<HttpResponseMessage> GetModelBinary(string path)
         {
-            string ZIP_PATH = "bin\\Debug\\netcoreapp3.1\\p15-elephant-audio-nrf52840-dk-v1.zip"; //  $"{filename}.zip";
-            string filename = "download-model";
+            HttpClient httpClient = new HttpClient();
 
-            const string contentType = "application/zip";
-            // HttpContext.Response.ContentType = contentType;
-            var result = new FileContentResult(System.IO.File.ReadAllBytes(ZIP_PATH), contentType)
-            {
-                FileDownloadName = $"{filename}.zip"
-            };
+            //string ZIP_PATH = "bin\\Debug\\netcoreapp3.1\\p15-elephant-audio-nrf52840-dk-v1.zip"; //  $"{filename}.zip";
+            //string filename = "download-model";
 
-            return result;
+            //const string contentType = "application/zip";
+            //// HttpContext.Response.ContentType = contentType;
+            //var result = new FileContentResult(System.IO.File.ReadAllBytes(ZIP_PATH), contentType)
+            //{
+            //    FileDownloadName = $"{filename}.zip"
+            //};
+
+            //return result;
 
             //using (HttpResponseMessage response = await _httpClient.GetAsync(path))
             //{
@@ -114,23 +119,26 @@ namespace OpenPlatform_WebPortal.Helper
             //    wc.DownloadFile(path, @"C:\Downloads\modelzip.zip");
             //}
 
-            ////var jsonModel = string.Empty;
-            ////Stream model = 
-            //try
-            //{
-            //    var fullPath = new Uri($"{path}");
-            //    if (!string.IsNullOrEmpty(_apiKey))
-            //    {
-            //        _httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
-            //        _httpClient.DefaultRequestHeaders.Add("Accept", "application/zip");
-            //    }
-            //    jsonModel = await _httpClient.GetStreamAsync(); // .GetStringAsync(fullPath);
-            //}
-            //catch (Exception e)
-            //{
-            //    _logger.LogError($"Error GetBuiltModels(): {e.Message}");
-            //}
-            //return jsonModel;
+            var jsonModel = string.Empty;
+            //Stream model = 
+            try
+            {
+                var fullPath = new Uri($"{path}");
+                if (!string.IsNullOrEmpty(_apiKey))
+                {
+                    httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
+                    httpClient.DefaultRequestHeaders.Add("Accept", "application/zip");
+                }
+                // jsonModel = await httpClient.GetStringAsync(fullPath); // GetStreamAsync(fullPath); // 
+
+                HttpResponseMessage response = await httpClient.GetAsync(fullPath);
+                return response;
+            }
+            catch (Exception e)
+            {
+                _logger.LogError($"Error GetBuiltModels(): {e.Message}");
+            }
+            return null;
         }
 
         /**********************************************************************************

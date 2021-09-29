@@ -2075,11 +2075,9 @@ Script block to update Telemetry/Events grid
         var downloadEiModel = function () {
             console.log("Get downloadEiModel");
 
+            var type = "nordic-nrf52840-dk";
 
-
-            @*var type = "nordic-nrf52840-dk";
-
-            var projectId = "47961"; // "p15-elephant-audio"; // $('#eiProjectIdDiv').text();
+            var projectId = $('#eiProjectIdDiv').text();
             var apiKey = $('#eiApiKeyDiv').text();
             console.log("eiApiKey" + apiKey)
 
@@ -2097,7 +2095,7 @@ Script block to update Telemetry/Events grid
                 error: function (jqXHR) {
                     alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
                 }
-            });*@
+            });
 
             document.getElementById('download').click();
         }
