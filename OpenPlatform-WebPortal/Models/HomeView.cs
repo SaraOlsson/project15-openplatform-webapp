@@ -18,9 +18,6 @@ namespace OpenPlatform_WebPortal.Models
         public DpsEnrollmentListViewModel dpsGroupEnrollmentList { get; set; }
 
         public EiFirmwareListViewModel eiFirmwareList { get; set; }
-
-        // REVIEW: move?
-        public string eiProjectId { get; set; }
         public string eiApiKey { get; set; }
     }
 

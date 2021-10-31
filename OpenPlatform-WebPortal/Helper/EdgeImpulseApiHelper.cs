@@ -1,21 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Net.Http.Headers;
-using System.IO;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 using OpenPlatform_WebPortal.Models;
+using Newtonsoft.Json;
 
 namespace OpenPlatform_WebPortal.Helper
 {
+    public class DeploymentInfo
+    {
+        public bool hasDeployment { get; set; }
+    }
+
     public class EdgeImpulseApiHelper
     {
         private static string _apiKey = string.Empty;
         private static ILogger _logger = null;
+
+        List<FirmwareOptionViewModel> ALL_FIRMWARES = new List<FirmwareOptionViewModel>()
+        {
+            new FirmwareOptionViewModel{ OptionName = "Nordic NRF52840 DK", OptionKey = "nordic-nrf52840-dk"},
+            new FirmwareOptionViewModel{ OptionName = "Nordic NRF5340 DK", OptionKey = "nordic-nrf5340-dk"},
+            new FirmwareOptionViewModel{ OptionName = "C++ library", OptionKey = "zip"}
+        };
 
         public EdgeImpulseApiHelper()
         {
@@ -37,7 +45,6 @@ namespace OpenPlatform_WebPortal.Helper
                 var fullPath = new Uri($"{path}");
                 if (!string.IsNullOrEmpty(_apiKey))
                 {
-                    //_httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("x-api-key", _apiKey);
                     httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
                     httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                 }
@@ -76,51 +83,6 @@ namespace OpenPlatform_WebPortal.Helper
         {
             HttpClient httpClient = new HttpClient();
 
-            //string ZIP_PATH = "bin\\Debug\\netcoreapp3.1\\p15-elephant-audio-nrf52840-dk-v1.zip"; //  $"{filename}.zip";
-            //string filename = "download-model";
-
-            //const string contentType = "application/zip";
-            //// HttpContext.Response.ContentType = contentType;
-            //var result = new FileContentResult(System.IO.File.ReadAllBytes(ZIP_PATH), contentType)
-            //{
-            //    FileDownloadName = $"{filename}.zip"
-            //};
-
-            //return result;
-
-            //using (HttpResponseMessage response = await _httpClient.GetAsync(path))
-            //{
-            //    using (var stream = await response.Content.ReadAsStreamAsync())
-            //    {
-            //        //return stream;
-
-            //        // string filename = "myzip";
-            //        string ZIP_PATH = "Elephant-voices-project-dataset-20210912T193510Z-001.zip"; //  $"{filename}.zip";
-
-            //        using (Stream zip = File.OpenWrite(ZIP_PATH))
-            //        {
-            //            stream.CopyTo(zip);
-
-            //            const string contentType = "application/zip";
-            //            // HttpContext.Response.ContentType = contentType;
-            //            var result = new FileContentResult(System.IO.Stream., contentType)
-            //            {
-            //                FileDownloadName = ZIP_PATH //  $"{filename}.zip"
-            //            };
-
-            //            return result;
-            //        }
-            //    }
-            //}
-
-
-            //using (System.Net.WebClient wc = new System.Net.WebClient())
-            //{
-            //    wc.DownloadFile(path, @"C:\Downloads\modelzip.zip");
-            //}
-
-            var jsonModel = string.Empty;
-            //Stream model = 
             try
             {
                 var fullPath = new Uri($"{path}");
@@ -129,9 +91,9 @@ namespace OpenPlatform_WebPortal.Helper
                     httpClient.DefaultRequestHeaders.Add("x-api-key", _apiKey);
                     httpClient.DefaultRequestHeaders.Add("Accept", "application/zip");
                 }
-                // jsonModel = await httpClient.GetStringAsync(fullPath); // GetStreamAsync(fullPath); // 
 
                 HttpResponseMessage response = await httpClient.GetAsync(fullPath);
+                
                 return response;
             }
             catch (Exception e)
@@ -142,33 +104,46 @@ namespace OpenPlatform_WebPortal.Helper
         }
 
         /**********************************************************************************
-         * Get list of devices from IoT Hub
+         * Get list of firmware builds from Edge Impulse
          *********************************************************************************/
-        public EiFirmwareListViewModel GetEiFirmwareList()
+
+        public async Task<EiFirmwareListViewModel> GetEiFirmwareList(string projectId)
         {
-            var iothubDeviceListViewModel = new EiFirmwareListViewModel();
+            // prepare  
+            EdgeImpulseApiHelper resolver = new EdgeImpulseApiHelper(_apiKey, _logger);
+            var eiFirmwareListModel = new EiFirmwareListViewModel();
+            List<FirmwareOptionViewModel> Options = new List<FirmwareOptionViewModel>();
+            string selected = "";
 
-            iothubDeviceListViewModel.Options.Add(new FirmwareOptionViewModel
+            foreach (var firmware in ALL_FIRMWARES)
             {
-                OptionName = "Nordic NRF52840 DK",
-                OptionKey = "nordic-nrf52840-dk"
-            });
+                try
+                {
+                    if (_apiKey != null)
+                    {
+                        string path = $"https://studio.edgeimpulse.com/v1/api/{projectId}/deployment?type={firmware.OptionKey}";
+                        var modelData = await GetBuiltModels(path);
 
-            iothubDeviceListViewModel.Options.Add(new FirmwareOptionViewModel
-            {
-                OptionName = "Nordic NRF5340 DK",
-                OptionKey = "nordic-nrf5340-dk"
-            });
+                        var deploymentInfo = JsonConvert.DeserializeObject<DeploymentInfo>(modelData);
 
-            iothubDeviceListViewModel.Options.Add(new FirmwareOptionViewModel
-            {
-                OptionName = "C++ library",
-                OptionKey = "zip"
-            });
+                        if (deploymentInfo.hasDeployment)
+                        {
+                            Options.Add(firmware);
+                            selected = firmware.OptionName;
+                        }
 
-            iothubDeviceListViewModel.SelectedOption = "Nordic NRF52840 DK";
+                        _logger.LogInformation($"RefreshFirmwareOptions: Got model info from project: {_apiKey}");
+                    }
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError($"Exception in GetEIBuilds() : {e.Message}");
+                }
+            }
 
-            return iothubDeviceListViewModel;
+            eiFirmwareListModel.Options = Options;
+            eiFirmwareListModel.SelectedOption = selected;
+            return eiFirmwareListModel;
         }
     }
 }

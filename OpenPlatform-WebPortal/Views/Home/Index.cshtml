@@ -96,8 +96,6 @@
                     <button type="button" id="btnDownloadModel" class="sidenavButton">Download model</button>
                 </td>
 
-                @*<a href="files/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>*@
-                @*<a href="../bin/Debug/netcoreapp3.1/p15-elephant-audio-nrf52840-dk-v1.zip" download id="download" hidden></a>*@
             </tr>
         </table>
 
@@ -800,7 +798,6 @@ Script block to update Telemetry/Events grid
 
             $('#btnConnectEIModelToDevice').attr("disabled", true);
             $('#btnDownloadModel').attr("disabled", true);
-            // RefreshFirmwareOptions(); // does not work yet
 
             // Initialize Authentication for TSI
             getTsiToken();
@@ -1054,7 +1051,6 @@ Script block to update Telemetry/Events grid
         });
 
         // Display a dialog to connect Edge Impulse project
-        // ModalConnectEdgeImpulse
         $('#btnConnectEIProjectPopup').click(function () {
             $('#ModalConnectEdgeImpulse').modal('show');
         })
@@ -1068,10 +1064,11 @@ Script block to update Telemetry/Events grid
         $('#btnConnectEIModelToDevice').click(function () {
             var targetDeviceId = $('#iotHubDeviceList option:selected').text();
             var projectName = $('#eiProjectIdName').text();
+            var projectId = $('#eiProjectIdDiv').text();
             console.log("btnConnectEIModelToDevice for device: " + targetDeviceId);
 
 
-            connectEIModelToDevice(targetDeviceId, projectName);
+            connectEIModelToDevice(targetDeviceId, projectName, projectId);
         })
 
         //
@@ -1290,18 +1287,11 @@ Script block to update Telemetry/Events grid
                 console.log("Connect Edge Impulse project " + apiKey);
                 $.ajax({
                     type: "POST",
-                    url: '@Url.Action("ConnectEIProject", "EdgeImpulse")', //  GetEIBuilds // ConnectEIProject
+                    url: '@Url.Action("GetEIProjects", "EdgeImpulse")',
                     data: { apiKey: apiKey},
                     success: function (response) {
 
-                        console.log("Connect Edge Impulse project " + apiKey + " SUCCESS");
-                        console.log(response);
-
                         var json = JSON.parse(response);
-
-                        console.log(json);
-                        console.log("Found Edge Impulse project " + json.projects[0].id);
-
                         document.getElementById('eiApiKeyDiv').innerHTML = apiKey;
                         document.getElementById('eiProjectIdDiv').innerHTML = json.projects[0].id;
                         document.getElementById('eiProjectIdName').innerHTML = json.projects[0].name;
@@ -1314,6 +1304,9 @@ Script block to update Telemetry/Events grid
                         a.title = "Edge Impulse Studio";
                         a.href = "https://studio.edgeimpulse.com/studio/"+ json.projects[0].id +"/acquisition/training";
                         document.getElementById('eistudiolinkdiv').appendChild(a);
+
+                        // get built firmware
+                        RefreshFirmwareOptions();
 
                     },
                     error: function (jqXHR) {
@@ -2024,14 +2017,14 @@ Script block to update Telemetry/Events grid
         //
 
 
-        var connectEIModelToDevice = function (deviceId, projectName) {
+        var connectEIModelToDevice = function (deviceId, projectName, projectId) {
 
             console.log("Post connectEIModelToDevice");
 
             $.ajax({
                 type: "POST",
                 url: '@Url.Action("ConnectEIModelToDevice", "EdgeImpulse")',
-                data: { deviceId: deviceId, projectName: projectName },
+                data: { deviceId: deviceId, projectName: projectName, projectId: projectId },
                 success: function (response) {
                     //debugger
                     console.log(response);
@@ -2063,8 +2056,8 @@ Script block to update Telemetry/Events grid
                     //debugger
                     console.log(response);
                     console.log("EI Options List");
-                    //$("#eiFirmwareList").empty();
-                    //$("#eiFirmwareList").append(response);
+                    $("#eiFirmwareList").empty();
+                    $("#eiFirmwareList").append(response);
                 },
                 error: function (jqXHR) {
                     alert(" Status: " + jqXHR.status + " " + jqXHR.responseText);
